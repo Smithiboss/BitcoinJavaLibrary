@@ -64,32 +64,38 @@ public class Helper {
      * @throws IOException Stream exception
      */
     public static Int readVarint(InputStream s) throws IOException {
+        // read the byte
         int prefix = s.read();
         if (prefix == -1) throw new IOException("Stream is corrupted");
 
-        // It is just the integer
+        // if the prefix is smaller than 253 (0xfd), it is just the integer
         if (prefix < 0xfd) return Int.parse(prefix);
-        // 0xfd means the next two bytes are the number
+        // 0xfd means the next two bytes are the number. The number is between 253 and 2^16-1
         else if (prefix == 0xfd) return littleEndianToInt(s.readNBytes(2));
-        // 0xfe means the next four bytes are the number
+        // 0xfe means the next four bytes are the number. The number is between 2^16 and 2^32-1
         else if (prefix == 0xfe) return littleEndianToInt(s.readNBytes(4));
-        // 0xff means the next eight bytes are the number
+        // 0xff means the next eight bytes are the number. The number is between 2^32 and 2^64-1
         else return littleEndianToInt(s.readNBytes(8));
     }
 
     /**
-     * Encodes an integer as a varint
+     * Encodes an integer as a varint. This is used to save space.
      * @param i a {@link Int} object
      * @return a {@code byte} array
      */
     public static byte[] encodeVarInt(Int i) {
+        // if the number is smaller than 253, encode it as a single byte
         if (i.compareTo(Hex.parse("fd")) < 0) return i.toBytes();
+        // if the number is between 253 and 2^16-1, start with 0xfd and then encode it in 2 bytes little endian
         else if (i.lt(Hex.parse("10000"))) {
             return Bytes.concat(new byte[]{(byte) 0xfd}, i.toBytesLittleEndian(2));
+        // if the number is between 2^16 and 2^32-1, start with 0xfe and then encode it in 4 bytes little endian
         } else if (i.lt(Hex.parse("100000000"))) {
             return Bytes.concat(new byte[]{(byte) 0xfe}, i.toBytesLittleEndian(4));
+        // if the number is between 2^32 and 2^64-1, start with 0xff and then encode it in 8 bytes little endian
         } else if (i.lt(Hex.parse("10000000000000000"))) {
             return Bytes.concat(new byte[]{(byte) 0xff}, i.toBytesLittleEndian(8));
+        // if the number is above 2^64-1, it is too large
         } else {
             throw new IllegalArgumentException("Integer too large: " + i);
         }
@@ -115,6 +121,17 @@ public class Helper {
         }
 
         return data;
+    }
+
+    /**
+     * <p>maskString.</p>
+     *
+     * @param str a {@link java.lang.String} object
+     * @param len an int
+     * @return a {@link java.lang.String} object
+     */
+    public static String maskString(String str, int len) {
+        return str.substring(0, len) + ":" + str.substring(str.length() - len);
     }
 
 }

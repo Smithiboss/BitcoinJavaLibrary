@@ -53,7 +53,7 @@ public class TxIn {
      * Returns the byte serialization of the transaction input
      * @return a {@code byte} array
      */
-    public byte[] serialize() {
+    public byte[] serialize() throws IOException {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         result.writeBytes(prevTx.toBytesLittleEndian(32));
         result.writeBytes(prevIndex.toBytesLittleEndian(4));

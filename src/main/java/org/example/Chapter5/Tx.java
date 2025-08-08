@@ -59,11 +59,11 @@ public class Tx {
      */
     public static Tx parse(ByteArrayInputStream s, boolean testnet) throws IOException {
         // s.read(n) will return n bytes
-        // Version is an integer in 4 bytes, little-endian
+        // version is an integer in 4 bytes, little-endian
         var version = Helper.littleEndianToInt(s.readNBytes(4));
         // inputNum is a varint, use readVarint(s)
         var inputNum = Helper.readVarint(s).longValue();
-        // Parse inputNum number of TxIns
+        // parse inputNum number of TxIns
         List<TxIn> inputs = new ArrayList<>();
         for (int i = 0; i < inputNum; i++) {
             inputs.add(TxIn.parse(s));
@@ -82,7 +82,7 @@ public class Tx {
 
     /**
      * Returns the byte serialization of the transaction
-     * @return a {code byte} array
+     * @return a {@code byte} array
      */
     public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();

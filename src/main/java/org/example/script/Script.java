@@ -5,7 +5,7 @@ import org.example.Utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 
-import java.io.ByteArrayInputStream;import
+import java.io.ByteArrayInputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayDeque;
@@ -88,7 +88,7 @@ public class Script {
 
         for (Cmd cmd : this.cmds) {
             if (cmd.isOpCode()) {
-                result.writeBytes(cmd);
+                result.writeBytes(cmd.getOpCode().getCode().toBytesLittleEndian(1));
             } else if (cmd.isElement()) {
 
                 var length = cmd.getElement().length;

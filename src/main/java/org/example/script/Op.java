@@ -7,6 +7,7 @@ import org.example.ecc.Hex;
 import org.example.ecc.Int;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +96,82 @@ public class Op {
         } catch (Exception e) {
             log.severe("Error while executing " + functionName + ": " + e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Encodes the given {@code int} into bytes
+     *
+     * @param num a {@code int}
+     * @return a {@code byte} array
+     */
+    static byte[] encodeNum(int num) {
+        var result = new byte[0];
+        // if num == 0, return the empty byte array
+        if (num == 0) {
+            return result;
+        }
+        var absNum = Math.abs(num);
+        var negative = num < 0;
+
+        // loop until absNum == 0
+        while (absNum != 0) {
+            // add the least significant byte to the result
+            result = Bytes.concat(result, new byte[]{(byte) (absNum & 0xff)});
+            // shift absNum 8 bits to the right (division by 256, integer)
+            absNum >>= 8;
+            // check if most significant bit of most significant byte is set
+            if ((result[result.length - 1] & 0x80) != 0) {
+                // if num is negative, append byte 0x80
+                if (negative) {
+                    result = Bytes.concat(result, new byte[]{(byte) (0x80)});
+                // if num is positive, append byte 0x00
+                } else {
+                    result = Bytes.concat(result, new byte[]{(byte) (0x00)});
+                }
+            // if num is negative but most significant bit of most significant byte is not set, set it
+            } else if (negative) {
+                result[result.length - 1] |= (byte) 0x80;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Decodes the given {@code byte} array into a number
+     *
+     * @param bytes a {@code byte} array
+     * @return an {@code int}
+     */
+    static int decodeNum(byte[] bytes) {
+        // if the byte array is empty, return zero
+        if (Arrays.equals(bytes, new byte[0])) {
+            return 0;
+        }
+        // reverse order to big endian
+        var bigEndian = Bytes.reverseOrder(bytes);
+        boolean negative;
+        int result;
+        // if most significant bit of most significant byte is set, number is negative
+        if ((bigEndian[0] & 0x80) != 0) {
+            negative = true;
+            // set most significant bit to zero
+            result = bigEndian[0] & 0x7f;
+        } else {
+            negative = false;
+            result = bigEndian[0];
+        }
+        // start with second byte
+        for (int c = 1; c < bytes.length; c++) {
+            // multiply with 256
+            result <<= 8;
+            // add the byte
+            result += c;
+        }
+        if (negative) {
+            return -result;
+        } else {
+            return result;
         }
     }
 

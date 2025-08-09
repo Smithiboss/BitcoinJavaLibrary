@@ -1,5 +1,7 @@
 package org.example.Utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class Bytes {
@@ -84,6 +86,21 @@ public class Bytes {
             hexChars[j*2+1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    /**
+     * Wrapper for readNBytes method from {@link ByteArrayInputStream}
+     *
+     * @param s a {@link ByteArrayInputStream}
+     * @param len a {@code int}
+     * @return a {@code byte} array
+     */
+    public static byte[] read(ByteArrayInputStream s, int len) {
+        try {
+            return s.readNBytes(len);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

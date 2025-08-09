@@ -24,7 +24,7 @@ public record Signature(Int r, Int s) {
      * @param sigBin a {@code byte} array
      * @return a {@link Signature} object
      */
-    public Signature parse(byte[] sigBin) {
+    public static Signature parse(byte[] sigBin) {
         var sigStream = new ByteArrayInputStream(sigBin);
         var compound = Hex.parse(sigStream.read());
         // check if first byte is 0x30

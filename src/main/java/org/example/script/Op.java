@@ -5,6 +5,8 @@ import org.example.Utils.Hash;
 import org.example.Utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
+import org.example.ecc.S256Point;
+import org.example.ecc.Signature;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -410,6 +412,43 @@ public class Op {
         stack.push(Hash.hash256(element));
         log.fine(String.format("%s", printStack(stack)));
         return true;
+    }
+
+    /**
+     * OP_CHECKSIG validates the signature
+     *
+     * @param stack a {@link Deque} object
+     * @param z a {@link Int} object
+     * @return a {@code boolean}
+     */
+    static boolean opCheckSig(Deque<byte[]> stack, Int z) {
+        // stack needs two elements at least
+        if (stack.size() < 2) {
+            return false;
+        }
+        // the top element is the SEC pubkey
+        var secPubKey = stack.pop();
+        var derSigWithHashType = stack.pop();
+        var derSig = Arrays.copyOf(derSigWithHashType, derSigWithHashType.length - 1);
+        // parse the serialized pubkey and signature into objects
+        S256Point point;
+        Signature sig;
+        try {
+            point = S256Point.parse(secPubKey);
+            sig = Signature.parse(derSig);
+        } catch (Exception e) {
+            log.severe(String.format("Exception %s", e.getMessage()));
+            return false;
+        }
+        // verify the signature
+        if (point.verify(z, sig)) {
+            stack.push(encodeNum(1));
+        } else {
+            stack.push(encodeNum(0));
+        }
+        log.fine(String.format("%s", printStack(stack)));
+        return true;
+
     }
 
     /**

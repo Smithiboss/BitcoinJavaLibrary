@@ -56,7 +56,7 @@ public class S256Point extends Point {
     }
 
     /**
-     * Returns the SEC format for {@link S256Point}
+     * Returns the SEC format for a {@link S256Point}
      * @return byte array
      */
     public byte[] sec(boolean compressed) {

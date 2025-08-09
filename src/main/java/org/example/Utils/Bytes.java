@@ -25,7 +25,7 @@ public class Bytes {
      * @param bytes byte array
      * @return byte array
      */
-    public static byte[] changeOrder(byte[] bytes) {
+    public static byte[] reverseOrder(byte[] bytes) {
         byte[] result = Arrays.copyOf(bytes, bytes.length);
         for (int i = 0; i < result.length / 2; i++) {
             byte temp = result[i];

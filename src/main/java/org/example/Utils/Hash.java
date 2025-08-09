@@ -6,6 +6,21 @@ import java.security.NoSuchAlgorithmException;
 public class Hash {
 
     /**
+     * Hashes the given {@code byte} array with SHA-1
+     *
+     * @param bytes an array of {@link byte} objects
+     * @return an array of {@link byte} objects
+     */
+    public static byte[] sha1(byte[] bytes) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            return digest.digest(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Applies SHA-256 on given {@code byte} array
      * @param bytes a {@code byte} array
      * @return a {@code byte} array

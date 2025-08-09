@@ -140,7 +140,7 @@ public class Script {
         while (!cmdsCopy.isEmpty()) {
             // get first
             var cmd = cmdsCopy.removeFirst();
-            // check if cmd is an opCode
+            // check if cmd is an opcode
             if (cmd.isOpCode()) {
                 // call operation method, will return a boolean
                 var operationResult = Op.operation(cmd.getOpCode(), stack, altStack, cmdsCopy, z);

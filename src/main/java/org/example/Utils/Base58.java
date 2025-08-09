@@ -29,12 +29,15 @@ public class Base58 {
         Int num = Hex.parse(input);
         String prefix = "1".repeat(zeroCount);
 
-        // Builds the string
         StringBuilder result = new StringBuilder();
-        // Loops over num and builds the Base58 string
+        // loops over num and builds the Base58 string
         while (num.gt(Int.parse(0))) {
+            // calculate the quotient and the remainder
             BigInteger[] divMod = num.getBigInteger().divideAndRemainder(BigInteger.valueOf(58));
+            // num equals the quotient
             num = Int.parse(divMod[0]);
+            // insert the correct BASE58 character by looking it up with the remainder.
+            // will always be between 0 and 57 inclusive because of mod 58 earlier
             result.insert(0, BASE58_ALPHABET.charAt(divMod[1].intValue()));
         }
 
@@ -57,9 +60,9 @@ public class Base58 {
      * @return a {@link String} object
      */
     public static String encodeChecksum(byte[] input) {
-        // Does hash256 on the input array and takes the first 4 bytes
+        // hashes input array with hash256 and takes the first 4 bytes
         byte[] checksum = Arrays.copyOfRange(Hash.hash256(input), 0, 4);
-        // Encodes the combination input + checksum in Base58
+        // encodes the combination input + checksum in Base58
         return Base58.encode(Bytes.concat(input, checksum));
     }
 }

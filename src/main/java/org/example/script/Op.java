@@ -19,19 +19,25 @@ public class Op {
     private Op() {};
 
     public static boolean operation(OpCodes opCode, Deque<byte[]> stack, Deque<byte[]> altStack, List<Cmd> cmds, Int z) {
+        // OP_IF and OP_NOTIF require manipulation of the cmds array based on the top element of the stack
         if (Set.of(OpCodes.OP_99_IF.getCode(), OpCodes.OP_100_NOTIF.getCode()).contains(opCode.getCode())) {
+            // terminate if cmds are missing
             if (cmds.isEmpty()) {
                 log.warning(String.format("Bad op: %s - missing cmds", opCode));
                 return false;
             }
+        // OP_TOALTSTACK and OP_FROMALTSTACK move stack elements to/from an "alternate" stack, they need the altstack
         } else if (Set.of(OpCodes.OP_107_TOALTSTACK.getCode(), OpCodes.OP_108_FROMALTSTACK.getCode()).contains(opCode.getCode())) {
+            // terminate if altstack is empty
             if (altStack.isEmpty()) {
                 log.warning(String.format("Bad op: %s - missing altstack", opCode));
                 return false;
             }
+        // OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKMULTISIG and OP_CHECKMULTISIGVERIFY all require the signature hash, z
         } else if (Set.of(OpCodes.OP_172_CHECKSIG.getCode(), OpCodes.OP_173_CHECKSIGVERIFY.getCode(),
                 OpCodes.OP_174_CHECKMULTISIG.getCode(), OpCodes.OP_175_CHECKMULTISIGVERIFY.getCode())
                 .contains(opCode.getCode())) {
+            // terminate if z is null
             if (z == null) {
                 log.warning(String.format("Bad op: %s - missing z", opCode));
                 return false;
@@ -93,7 +99,7 @@ public class Op {
     }
 
     /**
-     * <p>op0.</p>
+     * OP_0 pushes a 0 to the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -105,7 +111,7 @@ public class Op {
     }
 
     /**
-     * <p>op1.</p>
+     * OP_1 pushes a 1 to the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -117,7 +123,7 @@ public class Op {
     }
 
     /**
-     * <p>op2.</p>
+     * OP_2 pushes a 2 to the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -129,7 +135,7 @@ public class Op {
     }
 
     /**
-     * <p>op6.</p>
+     * OP_6 pushes a 6 to the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -141,7 +147,7 @@ public class Op {
     }
 
     /**
-     * <p>op105Verify.</p>
+     * OP_VERIFY marks a transaction as invalid if top stack value is not true
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -159,7 +165,7 @@ public class Op {
     }
 
     /**
-     * <p>op1102Dup.</p>
+     * OP_2DUP duplicates the top two stack items
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -178,6 +184,12 @@ public class Op {
         return true;
     }
 
+    /**
+     * OP_DUP duplicates the top stack item
+     *
+     * @param stack a {@link java.util.Deque} object
+     * @return a boolean
+     */
     static boolean opDup(Deque<byte[]> stack) {
         if (stack.isEmpty()) {
             return false;
@@ -190,7 +202,7 @@ public class Op {
     }
 
     /**
-     * <p>op124Swap.</p>
+     * OP_SWAP swaps the top two items on the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -208,7 +220,7 @@ public class Op {
     }
 
     /**
-     * <p>op135Equal.</p>
+     * OP_EQUAL returns true if the inputs are exactly equal, false otherwise
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -229,7 +241,7 @@ public class Op {
     }
 
     /**
-     * <p>op136EqualVerify.</p>
+     * OP_EQUALVERIFY is the same as OP_EQUAL, but runs OP_VERIFY afterward
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -239,7 +251,7 @@ public class Op {
     }
 
     /**
-     * <p>op145Not.</p>
+     * OP_NOT flips the input if it is 0 or 1. Otherwise, the output will be 0
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -259,7 +271,7 @@ public class Op {
     }
 
     /**
-     * <p>op147Add.</p>
+     * OP_ADD adds a to b
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -275,6 +287,12 @@ public class Op {
         return true;
     }
 
+    /**
+     * OP_SHA1 hashes the input using SHA-1
+     *
+     * @param stack a {@link java.util.Deque} object
+     * @return a boolean
+     */
     static boolean opSha1(Deque<byte[]> stack) {
         if (stack.isEmpty()) {
             return false;
@@ -285,6 +303,12 @@ public class Op {
         return true;
     }
 
+    /**
+     * OP_HASH160 hashed the input twice: first with SHA-256 and then with RIPEMD-160
+     *
+     * @param stack a {@link java.util.Deque} object
+     * @return a boolean
+     */
     static boolean opHash160(Deque<byte[]> stack) {
         if (stack.isEmpty()) {
             return false;
@@ -295,6 +319,12 @@ public class Op {
         return true;
     }
 
+    /**
+     * OP_HASH256 hashes the input two times with SHA-256
+     *
+     * @param stack a {@link java.util.Deque} object
+     * @return a boolean
+     */
     static boolean opHash256(Deque<byte[]> stack) {
         if (stack.isEmpty()) {
             return false;
@@ -306,7 +336,7 @@ public class Op {
     }
 
     /**
-     * <p>printStack.</p>
+     * Prints the stack
      *
      * @param stack a {@link java.util.Deque} object
      * @return a {@link java.lang.String} object
@@ -328,5 +358,4 @@ public class Op {
         stackBuilder.append("]");
         return stackBuilder.toString();
     }
-
 }

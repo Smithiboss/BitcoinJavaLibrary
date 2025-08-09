@@ -38,7 +38,7 @@ public class TxIn {
      */
     public static TxIn parse(ByteArrayInputStream s) throws Exception {
         // Get previous transaction ID
-        Int prevTx = Hex.parse(Bytes.changeOrder(s.readNBytes(32)));
+        Int prevTx = Hex.parse(Bytes.reverseOrder(s.readNBytes(32)));
         // Get previous transaction index
         Int prevIndex = Helper.littleEndianToInt(s.readNBytes(4));
         // Get ScriptSig

@@ -84,6 +84,12 @@ public enum OpCodes {
         this.codeFunc = codeFunc;
     }
 
+    /**
+     * Finds the opcode by given code
+     *
+     * @param code a {@link Int} object
+     * @return a {@link OpCodes} object
+     */
     public static OpCodes findByCode(Int code) {
         for (OpCodes op : values()) {
             if (op.code.equals(code)) {

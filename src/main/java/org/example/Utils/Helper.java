@@ -17,29 +17,32 @@ public class Helper {
      * @return a {@link Int} object
      */
     public static Int littleEndianToInt(byte[] bytes) {
-        byte[] reversed = Bytes.changeOrder(bytes);
+        byte[] reversed = Bytes.reverseOrder(bytes);
         return Hex.parse(reversed);
     }
 
+    /**
+     * Takes a {@link BigInteger} object and an {@code int} and returns the value as a {@code byte} array
+     * in little endian with the length of the {@code byte} array matching the given {@code int}
+     * @param value a {@link BigInteger} object
+     * @param byteLength an {@code int}
+     * @return a {@code byte} array
+     */
     public static byte[] bigIntToLittleEndian(BigInteger value, int byteLength) {
         byte[] temp = value.toByteArray();
 
-        // Entferne führendes 0-Byte falls nötig
+        // remove leading zero bytes if necessary
         if (temp.length > byteLength) {
             temp = Arrays.copyOfRange(temp, temp.length - byteLength, temp.length);
         }
 
-        // Fülle auf gewünschte Länge mit 0
+        // fills the array with leading zeros in order to match byteLength
         byte[] result = new byte[byteLength];
         int copyStart = byteLength - temp.length;
         System.arraycopy(temp, 0, result, copyStart, temp.length);
 
-        // Jetzt drehen für Little Endian
-        for (int i = 0; i < byteLength / 2; i++) {
-            byte tmp = result[i];
-            result[i] = result[byteLength - 1 - i];
-            result[byteLength - 1 - i] = tmp;
-        }
+        // reverse order for little endian
+        Bytes.reverseOrder(result);
 
         return result;
     }
@@ -101,6 +104,11 @@ public class Helper {
         }
     }
 
+    /**
+     *
+     * @param hex
+     * @return
+     */
     public static byte[] hexStringToByteArray(String hex) {
         int len = hex.length();
         if (len % 2 != 0) {
@@ -124,11 +132,11 @@ public class Helper {
     }
 
     /**
-     * <p>maskString.</p>
+     * Masks given {@link String} object by given length
      *
-     * @param str a {@link java.lang.String} object
-     * @param len an int
-     * @return a {@link java.lang.String} object
+     * @param str a {@link String} object
+     * @param len an {@code int}
+     * @return a {@link String} object
      */
     public static String maskString(String str, int len) {
         return str.substring(0, len) + ":" + str.substring(str.length() - len);

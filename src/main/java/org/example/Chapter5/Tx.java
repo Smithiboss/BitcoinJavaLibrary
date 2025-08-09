@@ -131,7 +131,7 @@ public class Tx {
      * @return a {@code byte} array
      */
     private byte[] hash() {
-        return Bytes.changeOrder(Hash.hash256(serialize()));
+        return Bytes.reverseOrder(Hash.hash256(serialize()));
     }
 
     /**

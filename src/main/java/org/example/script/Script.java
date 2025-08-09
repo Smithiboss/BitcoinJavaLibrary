@@ -40,9 +40,8 @@ public class Script {
      * Parse
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link Script} object
-     * @throws Exception Stream Exception
      */
-    public static Script parse(ByteArrayInputStream s) throws Exception {
+    public static Script parse(ByteArrayInputStream s) {
         // get length of entire script
         Int length = Helper.readVarint(s);
 
@@ -56,17 +55,17 @@ public class Script {
             count++;
             // if the byte is between 1 and 75 inclusive
             if (currentByte.ge(Int.parse(1)) && currentByte.le(Int.parse(75))) {
-                cmds.add(new Cmd(s.readNBytes(currentByte.intValue())));
+                cmds.add(new Cmd(Bytes.read(s, currentByte.intValue())));
                 count += currentByte.intValue();
             } else if (currentByte.eq(Int.parse(76))) {
                 // OP_PUSHDATA1
-                int dataLength = Helper.littleEndianToInt(s.readNBytes(1)).intValue();
-                cmds.add(new Cmd(s.readNBytes(dataLength)));
+                int dataLength = Helper.littleEndianToInt(Bytes.read(s, 1)).intValue();
+                cmds.add(new Cmd(Bytes.read(s, dataLength)));
                 count += dataLength + 1;
             } else if (currentByte.eq(Int.parse(77))) {
                 // OP_PUSHDATA2
-                int dataLength = Helper.littleEndianToInt(s.readNBytes(2)).intValue();
-                cmds.add(new Cmd(s.readNBytes(dataLength)));
+                int dataLength = Helper.littleEndianToInt(Bytes.read(s, 2)).intValue();
+                cmds.add(new Cmd(Bytes.read(s, dataLength)));
                 count += dataLength + 2;
             } else {
                 // it is an opcode
@@ -74,7 +73,7 @@ public class Script {
             }
         }
         if (count != length.intValue()) {
-            throw new Exception("Parsing script failed!");
+            throw new IllegalArgumentException("Parsing script failed");
         }
     return new Script(cmds);
     }
@@ -117,7 +116,7 @@ public class Script {
      * @return a {@code byte} array
      */
     public byte[] serialize() {
-        // serialize the script
+        // serializeLegacy the script
         var result = this.rawSerialize();
         var total = Int.parse(result.length);
         // encode the varint based on the script length

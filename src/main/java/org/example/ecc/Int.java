@@ -246,6 +246,15 @@ public class Int {
     }
 
     /**
+     * To hex
+     *
+     * @return a {@link Hex} object
+     */
+    public Hex toHex() {
+        return Hex.parse(this.bigInt.toByteArray());
+    }
+
+    /**
      * Get BigInteger
      * @return {@link BigInteger}
      */

@@ -3,6 +3,7 @@ package org.example.Utils;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -64,21 +65,19 @@ public class Helper {
      * Reads a variable integer from a stream
      * @param s a {@link InputStream}
      * @return a {@link Int} object
-     * @throws IOException Stream exception
      */
-    public static Int readVarint(InputStream s) throws IOException {
+    public static Int readVarint(ByteArrayInputStream s) {
         // read the byte
-        int prefix = s.read();
-        if (prefix == -1) throw new IOException("Stream is corrupted");
+        byte prefix = Bytes.read(s, 1)[0];
 
         // if the prefix is smaller than 253 (0xfd), it is just the integer
-        if (prefix < 0xfd) return Int.parse(prefix);
+        if (prefix < (byte) 0xfd) return Int.parse(prefix);
         // 0xfd means the next two bytes are the number. The number is between 253 and 2^16-1
-        else if (prefix == 0xfd) return littleEndianToInt(s.readNBytes(2));
+        else if (prefix == (byte) 0xfd) return littleEndianToInt(Bytes.read(s, 2));
         // 0xfe means the next four bytes are the number. The number is between 2^16 and 2^32-1
-        else if (prefix == 0xfe) return littleEndianToInt(s.readNBytes(4));
+        else if (prefix == (byte) 0xfe) return littleEndianToInt(Bytes.read(s, 4));
         // 0xff means the next eight bytes are the number. The number is between 2^32 and 2^64-1
-        else return littleEndianToInt(s.readNBytes(8));
+        else return littleEndianToInt(Bytes.read(s, 8));
     }
 
     /**

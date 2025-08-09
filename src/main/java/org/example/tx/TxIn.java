@@ -1,4 +1,4 @@
-package org.example.Chapter5;
+package org.example.tx;
 
 import org.example.Utils.Bytes;
 import org.example.Utils.Helper;
@@ -8,8 +8,6 @@ import org.example.script.Script;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.HexFormat;
 
 public class TxIn {
 
@@ -34,17 +32,16 @@ public class TxIn {
      * Takes a byte stream and parses the txInput at the start.
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link TxIn} object
-     * @throws IOException Exception
      */
-    public static TxIn parse(ByteArrayInputStream s) throws Exception {
+    public static TxIn parse(ByteArrayInputStream s) {
         // Get previous transaction ID
-        Int prevTx = Hex.parse(Bytes.reverseOrder(s.readNBytes(32)));
+        Int prevTx = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 32)));
         // Get previous transaction index
-        Int prevIndex = Helper.littleEndianToInt(s.readNBytes(4));
+        Int prevIndex = Helper.littleEndianToInt(Bytes.read(s, 4));
         // Get ScriptSig
         Script scriptSig = Script.parse(s);
         // Get sequence
-        Int sequence = Helper.littleEndianToInt(s.readNBytes(4));
+        Int sequence = Helper.littleEndianToInt(Bytes.read(s, 4));
 
         return new TxIn(prevTx, prevIndex, scriptSig, sequence);
     }
@@ -53,11 +50,11 @@ public class TxIn {
      * Returns the byte serialization of the transaction input
      * @return a {@code byte} array
      */
-    public byte[] serialize() throws IOException {
+    public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         result.writeBytes(prevTx.toBytesLittleEndian(32));
         result.writeBytes(prevIndex.toBytesLittleEndian(4));
-        result.write(scriptSig.serialize());
+        result.writeBytes(scriptSig.serialize());
         result.writeBytes(sequence.toBytesLittleEndian(4));
 
         return result.toByteArray();
@@ -68,10 +65,9 @@ public class TxIn {
      * @param testnet a {@code boolean}
      * @param fresh ???
      * @return a {@link Tx} object
-     * @throws Exception Exception
      */
-    public Tx fetch(boolean testnet, boolean fresh) throws Exception {
-        return TxFetcher.fetch(HexFormat.of().formatHex(prevTx), testnet, fresh);
+    public Tx fetch(boolean testnet, boolean fresh) {
+        return TxFetcher.fetch(prevTx.toHex().toString(), testnet, fresh);
     }
 
     /**
@@ -79,9 +75,8 @@ public class TxIn {
      * @param testnet a {@code boolean}
      * @param fresh ???
      * @return a {@link Int} object
-     * @throws Exception Exception
      */
-    public Int value(boolean testnet, boolean fresh) throws Exception {
+    public Int value(boolean testnet, boolean fresh) {
         Tx tx = fetch(testnet, fresh);
         return tx.getTxOuts().get((prevIndex.intValue())).amount();
     }
@@ -91,12 +86,25 @@ public class TxIn {
      * @param testnet a {@code boolean}
      * @param fresh ???
      * @return a {@link Object} object
-     * @throws IOException Exception
      */
-    public Object scriptPubkey(boolean testnet, boolean fresh) throws Exception {
+    public Script scriptPubkey(boolean testnet, boolean fresh) {
         Tx tx = fetch(testnet, fresh);
         return tx.getTxOuts().get(prevIndex.intValue()).scriptPubkey();
     }
 
+    public Int getPrevTx() {
+        return prevTx;
+    }
 
+    public Int getPrevIndex() {
+        return prevIndex;
+    }
+
+    public Script getScriptSig() {
+        return scriptSig;
+    }
+
+    public Int getSequence() {
+        return sequence;
+    }
 }

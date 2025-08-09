@@ -430,7 +430,7 @@ public class Op {
         var secPubKey = stack.pop();
         var derSigWithHashType = stack.pop();
         var derSig = Arrays.copyOf(derSigWithHashType, derSigWithHashType.length - 1);
-        // parse the serialized pubkey and signature into objects
+        // parseLegacy the serialized pubkey and signature into objects
         S256Point point;
         Signature sig;
         try {

@@ -1,9 +1,13 @@
 package org.example.Utils;
 
+import org.example.ecc.Int;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Hash {
+
+    public static final Int SIGHASH_ALL = Int.parse(1);
 
     /**
      * Hashes the given {@code byte} array with SHA-1

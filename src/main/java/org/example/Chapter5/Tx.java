@@ -86,21 +86,23 @@ public class Tx {
      */
     public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-
+        // serialize version
         result.writeBytes(version.toBytesLittleEndian(4));
-
+        // encode varint on the number of inputs
         result.writeBytes(Helper.encodeVarInt(Int.parse(txIns.size())));
-
+        // iterate over inputs
         for (TxIn txIn : txIns) {
+            // serialize each input
             result.writeBytes(txIn.serialize());
         }
-
+        // encode varint on the number of outputs
         result.writeBytes(Helper.encodeVarInt(Int.parse(txOuts.size())));
-
+        // iterate over outputs
         for (TxOut txOut : txOuts) {
+            // serialize each output
             result.writeBytes(txOut.serialize());
         }
-
+        // serialize locktime
         result.writeBytes(lockTime.toBytesLittleEndian(4));
 
         return result.toByteArray();

@@ -52,16 +52,35 @@ public class Tx {
     }
 
     /**
+     * Takes a raw string and parses the transaction at the start
+     * @param raw a {@link String} object
+     * @param testnet a {@code boolean}
+     * @return a {@link Tx} object
+     */
+    public static Tx parseLegacy(String raw, boolean testnet) {
+        return parseLegacy(Bytes.hexStringToByteArray(raw), testnet);
+    }
+
+    /**
+     * Takes a byte array and parses the transaction at the start
+     * @param bytes a {@code byte} array
+     * @param testnet a {@code boolean}
+     * @return a {@link Tx} object
+     */
+    public static Tx parseLegacy(byte[] bytes, boolean testnet) {
+        return parseLegacy(new ByteArrayInputStream(bytes), testnet);
+    }
+
+    /**
      * Takes a byte stream and parses the transaction at the start
      * @param s a {@link ByteArrayInputStream}
      * @param testnet a {@code boolean}
      * @return a {@link Tx} object
-     * @throws IOException Stream exception
      */
-    public static Tx parseLegacy(ByteArrayInputStream s, boolean testnet) throws IOException {
+    public static Tx parseLegacy(ByteArrayInputStream s, boolean testnet) {
         // s.read(n) will return n bytes
         // version is an integer in 4 bytes, little-endian
-        var version = Helper.littleEndianToInt(s.readNBytes(4));
+        var version = Helper.littleEndianToInt(Bytes.read(s, 4));
         // inputNum is a varint, use readVarint(s)
         var inputNum = Helper.readVarint(s).longValue();
         // parseLegacy inputNum number of TxIns
@@ -77,7 +96,7 @@ public class Tx {
             outputs.add(TxOut.parse(s));
         }
         // lockTime is an integer in 4 bytes, little-endian
-        var lockTime = Helper.littleEndianToInt(s.readNBytes(4));
+        var lockTime = Helper.littleEndianToInt(Bytes.read(s, 4));
         return new Tx(version, inputs, outputs, lockTime, testnet);
     }
 
@@ -112,10 +131,9 @@ public class Tx {
     /**
      * Returns the hash that needs to be signed for given index as an integer
      * @param inputIndex a {@code int}
-     * @param fresh a {@code boolean}
      * @return a {@link Int} object
      */
-    public Int sigHash(int inputIndex, boolean fresh) {
+    public Int sigHash(int inputIndex) {
         var stream = new ByteArrayOutputStream();
         // serialize version
         stream.writeBytes(version.toBytesLittleEndian(4));
@@ -128,7 +146,7 @@ public class Tx {
             // check if input index is reached
             if (i == inputIndex) {
                 // copy scriptPubKey from output of previous transaction
-                scriptSig = txIn.scriptPubkey(testnet, fresh);
+                scriptSig = txIn.scriptPubkey(testnet);
             } else {
                 // remove scriptSig
                 scriptSig = null;
@@ -155,29 +173,42 @@ public class Tx {
      * @param inputIndex a {@code int}
      * @return a {@code boolean}
      */
-    public boolean validateInput(int inputIndex) {
+    public boolean verifyInput(int inputIndex) {
         var txIn = txIns.get(inputIndex);
         // get the scriptPubkey of previous output
-        var scriptPubKey = txIn.scriptPubkey(testnet, false);
+        var scriptPubKey = txIn.scriptPubkey(testnet);
         // calculate z
-        var z = sigHash(inputIndex, false);
+        var z = sigHash(inputIndex);
         // combine Script Signature and Script PubKey
         var combined = txIn.getScriptSig().add(scriptPubKey);
         // evaluate the combined script
         return combined.evaluate(z);
     }
 
+    public boolean verify() {
+        // check that the transaction is not creating coins
+        if (fee(this.testnet).lt(Int.parse(0))) {
+            return false;
+        }
+        // check that every input has a valid scriptSig
+        for (int i = 0; i < txIns.size(); i++) {
+            if (!this.verifyInput(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Calculates the fee
      * @param testnet a {@code boolean}
-     * @param fresh a {@code boolean}
      * @return a {@link Int} object
      */
-    public Int fee(boolean testnet, boolean fresh) {
+    public Int fee(boolean testnet) {
         var inputSum = Int.parse(0);
         var outputSum = Int.parse(0);
         for (TxIn txIn : txIns) {
-            inputSum.add(txIn.value(testnet, fresh));
+            inputSum.add(txIn.value(testnet));
         }
         for (TxOut txOut : txOuts) {
             outputSum.add(txOut.amount());

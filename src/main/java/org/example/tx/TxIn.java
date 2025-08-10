@@ -63,32 +63,29 @@ public class TxIn {
     /**
      *
      * @param testnet a {@code boolean}
-     * @param fresh ???
      * @return a {@link Tx} object
      */
-    public Tx fetch(boolean testnet, boolean fresh) {
-        return TxFetcher.fetch(prevTx.toHex().toString(), testnet, fresh);
+    public Tx fetch(boolean testnet) {
+        return TxFetcher.fetch(prevTx.toHex().toString(), testnet);
     }
 
     /**
      * Get the output value by looking up the tx hash. Returns the amount in satoshi.
      * @param testnet a {@code boolean}
-     * @param fresh ???
      * @return a {@link Int} object
      */
-    public Int value(boolean testnet, boolean fresh) {
-        Tx tx = fetch(testnet, fresh);
+    public Int value(boolean testnet) {
+        Tx tx = fetch(testnet);
         return tx.getTxOuts().get((prevIndex.intValue())).amount();
     }
 
     /**
      * Get the ScriptPubKey by looking up the tx hash. Returns a Script object.
      * @param testnet a {@code boolean}
-     * @param fresh ???
      * @return a {@link Object} object
      */
-    public Script scriptPubkey(boolean testnet, boolean fresh) {
-        Tx tx = fetch(testnet, fresh);
+    public Script scriptPubkey(boolean testnet) {
+        Tx tx = fetch(testnet);
         return tx.getTxOuts().get(prevIndex.intValue()).scriptPubkey();
     }
 

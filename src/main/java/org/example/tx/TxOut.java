@@ -1,5 +1,6 @@
 package org.example.tx;
 
+import org.example.Utils.Bytes;
 import org.example.Utils.Helper;
 import org.example.ecc.Int;
 import org.example.script.Script;
@@ -21,10 +22,9 @@ public record TxOut(Int amount, Script scriptPubkey) {
      * Parse
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link TxOut} object
-     * @throws IOException Stream Exception
      */
-    public static TxOut parse(ByteArrayInputStream s) throws IOException {
-        Int amount = Helper.littleEndianToInt(s.readNBytes(8));
+    public static TxOut parse(ByteArrayInputStream s) {
+        Int amount = Helper.littleEndianToInt(Bytes.read(s, 8));
 
         Script scriptPubkey = Script.parse(s);
 

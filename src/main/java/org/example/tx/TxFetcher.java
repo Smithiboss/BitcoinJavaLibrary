@@ -1,9 +1,10 @@
 package org.example.tx;
 
+import org.example.Utils.Bytes;
 import org.example.Utils.Helper;
+import org.example.script.Op;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -11,21 +12,34 @@ import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TxFetcher {
 
-    private static final Map<String, Tx> cache = new HashMap<>();
-    private static final HttpClient httpClient = HttpClient.newHttpClient();
-    public boolean testnet;
+    private static final Logger log = Logger.getLogger(Op.class.getSimpleName());
 
+    private static final Map<String, String> cache = new HashMap<>();
+    private static final HttpClient httpClient = HttpClient.newHttpClient();
+
+    /**
+     *
+     * @param testnet
+     * @return
+     */
     public static String getUrl(boolean testnet) {
         return testnet ? "https://blockstream.info/testnet/api" : "https://blockstream.info/api";
     }
 
-    public static Tx fetch(String txId, boolean testnet, boolean fresh) {
-        if (fresh || !cache.containsKey(txId)) {
+    /**
+     *
+     * @param txId
+     * @param testnet
+     * @return
+     */
+    public static Tx fetch(String txId, boolean testnet) {
+        String rawTx = null;
+        if (!cache.containsKey(txId)) {
             String url = getUrl(testnet) + "/tx/" + txId + "/hex/";
-            String hex;
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -39,35 +53,72 @@ public class TxFetcher {
                     throw new IOException("HTTP error " + response.statusCode() + ": " + response.body());
                 }
 
-                byte[] raw;
                 try {
-                    raw = Helper.hexStringToByteArray(response.body().trim());
+                    rawTx = response.body().trim();
                 } catch (IllegalArgumentException e) {
                     throw new IOException("Invalid hex: " + response.body());
                 }
+
                 Tx tx;
-                if ((raw[4] & 0xFF) == 0) {
-                    byte[] trimmed = new byte[raw.length - 2];
-                    System.arraycopy(raw, 0, trimmed, 0, 4);
-                    System.arraycopy(raw, 6, trimmed, 4, raw.length - 6);
+                byte[] rawBytes = Bytes.hexStringToByteArray(rawTx);
+                if ((rawBytes[4] & 0xFF) == 0) {
+                    byte[] trimmed = new byte[rawBytes.length - 2];
+                    System.arraycopy(rawBytes, 0, trimmed, 0, 4);
+                    System.arraycopy(rawBytes, 6, trimmed, 4, rawBytes.length - 6);
 
                     tx = Tx.parseLegacy(new ByteArrayInputStream(trimmed), testnet);
-                    byte[] lockTimeBytes = Arrays.copyOfRange(raw, raw.length - 4, raw.length);
+                    byte[] lockTimeBytes = Arrays.copyOfRange(rawBytes, rawBytes.length - 4, rawBytes.length);
                     tx.setLockTime(Helper.littleEndianToInt(lockTimeBytes));
                 } else {
-                    tx = Tx.parseLegacy(new ByteArrayInputStream(raw), testnet);
+                    tx = Tx.parseLegacy(new ByteArrayInputStream(rawBytes), testnet);
                 }
 
                 if (!tx.getId().equals(txId)) {
                     throw new IOException("Transaction ID mismatch: " + tx.getId() + " vs " + txId);
                 }
-                cache.put(txId, tx);
+                if (cache != null) {
+                    cache.put(txId, rawTx);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        } else {
+            rawTx = cache.get(txId);
         }
-        Tx result = cache.get(txId);
-        result.setTestnet(testnet);
-        return result;
+        return Tx.parseLegacy(rawTx, testnet);
+    }
+
+    /**
+     * Saves cache to json
+     * @param filePath a {@link String} object
+     */
+    public static void dumpCache(String filePath) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
+            for (Map.Entry<String, String> entry : cache.entrySet()) {
+                writer.write(entry.getKey() + "," + entry.getValue());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            log.warning(e.getMessage());
+        }
+    }
+
+    /**
+     * Loads cache from json
+     * @param filePath a {@link String} object
+     */
+    public static void loadCache(String filePath) {
+        cache.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",", 2);
+                if (parts.length == 2) {
+                    cache.put(parts[0], parts[1]);
+                }
+            }
+        } catch (IOException e) {
+            log.warning(e.getMessage());
+        }
     }
 }

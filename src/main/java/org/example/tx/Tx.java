@@ -185,6 +185,10 @@ public class Tx {
         return combined.evaluate(z);
     }
 
+    /**
+     * Verify this transaction
+     * @return a {@code boolean}
+     */
     public boolean verify() {
         // check that the transaction is not creating coins
         if (fee(this.testnet).lt(Int.parse(0))) {

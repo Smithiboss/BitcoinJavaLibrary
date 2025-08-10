@@ -151,6 +151,23 @@ public class Tx {
     }
 
     /**
+     * Validates the signature of the input at inputIndex
+     * @param inputIndex a {@code int}
+     * @return a {@code boolean}
+     */
+    public boolean validateInput(int inputIndex) {
+        var txIn = txIns.get(inputIndex);
+        // get the scriptPubkey of previous output
+        var scriptPubKey = txIn.scriptPubkey(testnet, false);
+        // calculate z
+        var z = sigHash(inputIndex, false);
+        // combine Script Signature and Script PubKey
+        var combined = txIn.getScriptSig().add(scriptPubKey);
+        // evaluate the combined script
+        return combined.evaluate(z);
+    }
+
+    /**
      * Calculates the fee
      * @param testnet a {@code boolean}
      * @param fresh a {@code boolean}

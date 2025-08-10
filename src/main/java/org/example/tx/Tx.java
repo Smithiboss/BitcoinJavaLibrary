@@ -5,6 +5,8 @@ import org.example.Utils.Hash;
 import org.example.Utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
+import org.example.ecc.PrivateKey;
+import org.example.script.Cmd;
 import org.example.script.Script;
 
 import java.io.ByteArrayInputStream;
@@ -201,6 +203,28 @@ public class Tx {
             }
         }
         return true;
+    }
+
+    /**
+     * Signs input with the provided private key
+     * @param inputIndex a {@code int}
+     * @param privateKey a {@link PrivateKey} object
+     * @return a {@code boolean}
+     */
+    public boolean signInput(int inputIndex, PrivateKey privateKey) {
+        var z = sigHash(inputIndex);
+        // create signature of z and serialize with DER
+        var der = privateKey.sign(z).der();
+        // append SIGHASH_ALL to der
+        var sig = Bytes.concat(der, Hash.SIGHASH_ALL.toBytes(1));
+        // get sec
+        var sec = privateKey.getPublicKey().sec(true);
+        // create new script with [sig, sec] as cmds
+        var script = new Script(List.of(new Cmd(sig), new Cmd(sec)));
+        // set inputs scriptSig to script
+        this.txIns.get(inputIndex).setScriptSig(script);
+        // validate signature
+        return verifyInput(inputIndex);
     }
 
     /**

@@ -11,9 +11,9 @@ import java.io.ByteArrayOutputStream;
 
 public class TxIn {
 
-    private final Int prevTx;         // 32 bytes
+    private final Int prevTx;            // 32 bytes
     private final Int prevIndex;         // 4 bytes
-    private final Script scriptSig;      // variable
+    private Script scriptSig;            // variable
     private final Int sequence;          // 4 bytes
 
     public TxIn(Int prevTx, Int prevIndex, Script scriptSig, Int sequence) {
@@ -103,5 +103,9 @@ public class TxIn {
 
     public Int getSequence() {
         return sequence;
+    }
+
+    public void setScriptSig(Script scriptSig) {
+        this.scriptSig = scriptSig;
     }
 }

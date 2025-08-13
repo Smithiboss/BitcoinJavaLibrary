@@ -2,8 +2,6 @@ package org.example.ecc;
 
 import org.junit.Test;
 
-import java.math.BigInteger;
-
 import static org.junit.Assert.*;
 
 public class FieldElementTest {
@@ -20,7 +18,7 @@ public class FieldElementTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             new FieldElement(Int.parse(8), Int.parse(7));
         });
-        assertTrue(exception.getMessage().contains("not in field range"));
+        assertTrue(exception.getMessage().contains("not in the range"));
     }
 
     @Test
@@ -53,40 +51,40 @@ public class FieldElementTest {
 
     @Test
     public void testAddition() {
-        FieldElement a = new FieldElement(BigInteger.valueOf(5), BigInteger.valueOf(7));
-        FieldElement b = new FieldElement(BigInteger.valueOf(6), BigInteger.valueOf(7));
-        FieldElement expected = new FieldElement(BigInteger.valueOf(4), BigInteger.valueOf(7));
+        FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
+        FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
+        FieldElement expected = new FieldElement(Int.parse(4), Int.parse(7));
         assertEquals(expected, a.add(b));
     }
 
     @Test
     public void testSubtraction() {
-        FieldElement a = new FieldElement(BigInteger.valueOf(5), BigInteger.valueOf(7));
-        FieldElement b = new FieldElement(BigInteger.valueOf(6), BigInteger.valueOf(7));
-        FieldElement expected = new FieldElement(BigInteger.valueOf(6), BigInteger.valueOf(7));
+        FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
+        FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
+        FieldElement expected = new FieldElement(Int.parse(6), Int.parse(7));
         assertEquals(expected, a.sub(b));
     }
 
     @Test
     public void testMultiplication() {
-        FieldElement a = new FieldElement(BigInteger.valueOf(5), BigInteger.valueOf(7));
-        FieldElement b = new FieldElement(BigInteger.valueOf(6), BigInteger.valueOf(7));
-        FieldElement expected = new FieldElement(BigInteger.valueOf(2), BigInteger.valueOf(7));
+        FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
+        FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
+        FieldElement expected = new FieldElement(Int.parse(2), Int.parse(7));
         assertEquals(expected, a.mul(b));
     }
 
     @Test
     public void testPower() {
-        FieldElement a = new FieldElement(BigInteger.valueOf(3), BigInteger.valueOf(13));
-        FieldElement expected = new FieldElement(BigInteger.valueOf(9), BigInteger.valueOf(13));
-        assertEquals(expected, a.pow(BigInteger.valueOf(-4)));
+        FieldElement a = new FieldElement(Int.parse(3), Int.parse(13));
+        FieldElement expected = new FieldElement(Int.parse(9), Int.parse(13));
+        assertEquals(expected, a.pow(Int.parse(-4)));
     }
 
     @Test
     public void testDivision() {
-        FieldElement a = new FieldElement(BigInteger.valueOf(2), BigInteger.valueOf(19));
-        FieldElement b = new FieldElement(BigInteger.valueOf(7), BigInteger.valueOf(19));
-        FieldElement expected = new FieldElement(BigInteger.valueOf(3), BigInteger.valueOf(19));
+        FieldElement a = new FieldElement(Int.parse(2), Int.parse(19));
+        FieldElement b = new FieldElement(Int.parse(7), Int.parse(19));
+        FieldElement expected = new FieldElement(Int.parse(3), Int.parse(19));
         assertEquals(expected, a.div(b));
     }
 }

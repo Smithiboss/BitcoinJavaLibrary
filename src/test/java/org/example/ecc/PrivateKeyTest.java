@@ -1,8 +1,9 @@
 package org.example.ecc;
 
+import org.example.Utils.Hash;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class PrivateKeyTest {
 
@@ -16,6 +17,14 @@ public class PrivateKeyTest {
     public void testAddress() {
         PrivateKey privateKey = new PrivateKey(Int.parse(5002));
         assertEquals("mmTPbXQFxboEtNRkwfh6K51jvdtHLxGeMA", privateKey.getPublicKey().address(false, true));
+    }
+
+    @Test
+    public void testSign() {
+        PrivateKey privateKey = new PrivateKey(Int.parse(12345));
+        var z = Hex.parse(Hash.hash256("Programming Bitcoin!".getBytes()));
+        var sig = privateKey.sign(z);
+        assertTrue(privateKey.getPublicKey().verify(z, sig));
     }
 
 }

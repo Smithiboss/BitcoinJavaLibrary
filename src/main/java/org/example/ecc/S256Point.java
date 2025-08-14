@@ -125,14 +125,10 @@ public class S256Point extends Point {
      * @return a {@link String}
      */
     public String address(boolean compressed, boolean testnet) {
-        // Compute hash160 on SEC format
+        // Compute hash160 of SEC format
         byte[] h160 = this.hash160(compressed);
         // Load prefix depending on testnet
         byte prefix = (byte) (testnet ? 0x6f : 0x00);
-
-        // byte[] prefixedH160 = new byte[1 + h160.length];
-        // prefixedH160[0] = prefix;
-        // System.arraycopy(h160, 0, prefixedH160, 1, h160.length);
 
         return Base58.encodeChecksum(Bytes.concat(new byte[]{prefix}, h160));
     }

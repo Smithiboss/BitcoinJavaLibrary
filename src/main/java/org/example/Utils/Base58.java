@@ -44,6 +44,45 @@ public class Base58 {
         return prefix + result;
     }
 
+    /**
+     * Get the number represented by Base58
+     * @param s a {@link String} object
+     * @return a {@link Int} object
+     */
+    public static Int decode(String s) {
+        var num = Int.parse(0);
+
+        for (int i = 0; i < s.length(); i++) {
+            num = num.mul(Int.parse(58));
+            num = num.add(Int.parse(s.charAt(i)));
+        }
+
+        return num;
+    }
+
+    /**
+     * Get 20-byte hash from address
+     * @param address a {@link String} object
+     * @return a {@code byte} array
+     */
+    public static byte[] decodeAddress(String address) {
+        var num = decode(address);
+        // get hex bytes
+        var combined = num.toBytes(25);
+        // get the checksum
+        var checksum = Arrays.copyOfRange(combined, combined.length - 4, combined.length);
+        // get everything without the checksum
+        var hashInput = Arrays.copyOfRange(combined, 0, combined.length - 4);
+        // perform hash256 on hashInput
+        var hash = Hash.hash256(hashInput);
+        // check if checksum is correct
+        if (Arrays.compare(Arrays.copyOfRange(hash, 0, 4), checksum) != 0) {
+            throw new IllegalStateException("Invalid checksum");
+        }
+        // return only the 20-byte hash
+        return Arrays.copyOfRange(combined, 1, combined.length - 4);
+    }
+
     public static byte[] hexStringToBytes(String hex) {
         int len = hex.length();
         byte[] data = new byte[len / 2];
@@ -62,7 +101,7 @@ public class Base58 {
     public static String encodeChecksum(byte[] input) {
         // hashes input array with hash256 and takes the first 4 bytes
         byte[] checksum = Arrays.copyOfRange(Hash.hash256(input), 0, 4);
-        // encodes the combination input + checksum in Base58
+        // returns the encoded combination of input + checksum in Base58
         return Base58.encode(Bytes.concat(input, checksum));
     }
 }

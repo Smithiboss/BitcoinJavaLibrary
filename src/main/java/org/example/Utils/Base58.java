@@ -54,7 +54,7 @@ public class Base58 {
 
         for (int i = 0; i < s.length(); i++) {
             num = num.mul(Int.parse(58));
-            num = num.add(Int.parse(s.charAt(i)));
+            num = num.add(Int.parse(BASE58_ALPHABET.indexOf(s.charAt(i))));
         }
 
         return num;
@@ -75,8 +75,9 @@ public class Base58 {
         var hashInput = Arrays.copyOfRange(combined, 0, combined.length - 4);
         // perform hash256 on hashInput
         var hash = Hash.hash256(hashInput);
+        var hashchecksum = Arrays.copyOfRange(hash, 0, 4);
         // check if checksum is correct
-        if (Arrays.compare(Arrays.copyOfRange(hash, 0, 4), checksum) != 0) {
+        if (Arrays.compare(hashchecksum, checksum) != 0) {
             throw new IllegalStateException("Invalid checksum");
         }
         // return only the 20-byte hash

@@ -1,13 +1,13 @@
 package org.example.tx;
 
 import org.example.Utils.Bytes;
-import org.example.Utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 import org.example.script.Script;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Objects;
 
 public class TxIn {
 
@@ -19,7 +19,7 @@ public class TxIn {
     public TxIn(Int prevTx, Int prevIndex, Script scriptSig, Int sequence) {
         this.prevTx = prevTx;
         this.prevIndex = prevIndex;
-        this.scriptSig = scriptSig;
+        this.scriptSig = Objects.requireNonNullElse(scriptSig, new Script(null));
         this.sequence = sequence;
     }
 
@@ -37,11 +37,11 @@ public class TxIn {
         // Get previous transaction ID
         Int prevTx = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 32)));
         // Get previous transaction index
-        Int prevIndex = Helper.littleEndianToInt(Bytes.read(s, 4));
+        Int prevIndex = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
         // Get ScriptSig
         Script scriptSig = Script.parse(s);
         // Get sequence
-        Int sequence = Helper.littleEndianToInt(Bytes.read(s, 4));
+        Int sequence = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
 
         return new TxIn(prevTx, prevIndex, scriptSig, sequence);
     }

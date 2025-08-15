@@ -20,4 +20,15 @@ public class Hex extends Int{
         return new Hex(hex);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(String.format("%x", super.getBigInteger()));
+        if (builder.length() % 2 == 1) {
+            builder.insert(0, "0");
+        }
+        return builder.toString();
+    }
+
 }

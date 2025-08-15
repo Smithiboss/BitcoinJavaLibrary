@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Tx {
@@ -35,12 +36,12 @@ public class Tx {
     @Override
     public String toString() {
         StringBuilder txInsStr = new StringBuilder();
-        for (Object txIn : txIns) {
+        for (TxIn txIn : txIns) {
             txInsStr.append(txIn.toString()).append("\n");
         }
 
         StringBuilder txOutsStr = new StringBuilder();
-        for (Object txOut : txOuts) {
+        for (TxOut txOut : txOuts) {
             txOutsStr.append(txOut.toString()).append("\n");
         }
 
@@ -84,21 +85,23 @@ public class Tx {
         // version is an integer in 4 bytes, little-endian
         var version = Helper.littleEndianToInt(Bytes.read(s, 4));
         // inputNum is a varint, use readVarint(s)
-        var inputNum = Helper.readVarint(s).longValue();
+        var inputNum = Helper.readVarint(s).intValue();
+        System.out.println("inputNum: " + inputNum);
         // parseLegacy inputNum number of TxIns
         List<TxIn> inputs = new ArrayList<>();
         for (int i = 0; i < inputNum; i++) {
             inputs.add(TxIn.parse(s));
         }
         // outputNum is a varint, use readVarint(s)
-        var outputNum = Helper.readVarint(s).longValue();
+        var outputNum = Helper.readVarint(s).intValue();
+        System.out.println("outputNum: " + outputNum);
         // parseLegacy outputNum number of TxOuts
         List<TxOut> outputs = new ArrayList<>();
         for (int i = 0; i < outputNum; i++) {
             outputs.add(TxOut.parse(s));
         }
         // lockTime is an integer in 4 bytes, little-endian
-        var lockTime = Helper.littleEndianToInt(Bytes.read(s, 4));
+        var lockTime = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
         return new Tx(version, inputs, outputs, lockTime, testnet);
     }
 

@@ -37,6 +37,21 @@ public class Script {
     }
 
     /**
+     * Takes a hash160 and returns the p2pkh ScriptPubKey
+     * @param h160 a {@code byte} array
+     * @return a {@link Script} object
+     */
+    public static Script p2pkhScript(byte[] h160) {
+        List<Cmd> cmds = new ArrayList<>();
+        cmds.add(OpCodes.OP_118_DUP.toCmd());
+        cmds.add(OpCodes.OP_169_HASH160.toCmd());
+        cmds.add(new Cmd(h160));
+        cmds.add(OpCodes.OP_136_EQUALVERIFY.toCmd());
+        cmds.add(OpCodes.OP_172_CHECKSIG.toCmd());
+        return new Script(cmds);
+    }
+
+    /**
      * Parse
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link Script} object
@@ -44,6 +59,7 @@ public class Script {
     public static Script parse(ByteArrayInputStream s) {
         // get length of entire script
         Int length = Helper.readVarint(s);
+        System.out.println("length: " + length);
 
         var cmds = new ArrayList<Cmd>();
         // keep track of the current position inside the stream
@@ -167,4 +183,26 @@ public class Script {
         // else the script succeeded
         return true;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        List<String> result = new ArrayList<>();
+        for (Cmd cmd : cmds) {
+            if (cmd.isOpCode()) {
+                // if the cmd is an integer, it's an opcode
+                result.add(cmd.getOpCode().getCodeName());
+            } else if (cmd.isElement()) {
+                // otherwise, this is an element
+                result.add(cmd.getElementAsString());
+            } else {
+                throw new IllegalStateException();
+            }
+        }
+        return String.join(" ", result);
+    }
+
+
 }

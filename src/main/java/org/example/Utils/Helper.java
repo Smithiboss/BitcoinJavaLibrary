@@ -70,14 +70,14 @@ public class Helper {
         // read the byte
         byte prefix = Bytes.read(s, 1)[0];
 
-        // if the prefix is smaller than 253 (0xfd), it is just the integer
-        if (prefix < (byte) 0xfd) return Int.parse(prefix);
         // 0xfd means the next two bytes are the number. The number is between 253 and 2^16-1
-        else if (prefix == (byte) 0xfd) return littleEndianToInt(Bytes.read(s, 2));
+        if (prefix == (byte) 0xfd) return littleEndianToInt(Bytes.read(s, 2));
         // 0xfe means the next four bytes are the number. The number is between 2^16 and 2^32-1
         else if (prefix == (byte) 0xfe) return littleEndianToInt(Bytes.read(s, 4));
         // 0xff means the next eight bytes are the number. The number is between 2^32 and 2^64-1
-        else return littleEndianToInt(Bytes.read(s, 8));
+        else if (prefix == (byte) 0xff) return littleEndianToInt(Bytes.read(s, 8));
+        // if the prefix is smaller than 253 (0xfd), it is just the integer
+        else return Hex.parse(prefix);
     }
 
     /**
@@ -87,7 +87,7 @@ public class Helper {
      */
     public static byte[] encodeVarInt(Int i) {
         // if the number is smaller than 253, encode it as a single byte
-        if (i.compareTo(Hex.parse("fd")) < 0) return i.toBytes();
+        if (i.lt(Hex.parse("fd"))) return i.toBytes(1);
         // if the number is between 253 and 2^16-1, start with 0xfd and then encode it in 2 bytes little endian
         else if (i.lt(Hex.parse("10000"))) {
             return Bytes.concat(new byte[]{(byte) 0xfd}, i.toBytesLittleEndian(2));
@@ -112,6 +112,10 @@ public class Helper {
      */
     public static String maskString(String str, int len) {
         return str.substring(0, len) + ":" + str.substring(str.length() - len);
+    }
+
+    public static String zfill(int length, String bytes) {
+        return String.format("%" + length + "s", bytes).replace(' ', '0');
     }
 
 }

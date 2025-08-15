@@ -1,5 +1,7 @@
 package org.example.script;
 
+import org.example.Utils.Bytes;
+
 public class Cmd {
 
     private byte[] element;
@@ -28,6 +30,10 @@ public class Cmd {
 
     public byte[] getElement() {
         return element;
+    }
+
+    public String getElementAsString() {
+        return Bytes.byteArrayToHexString(element);
     }
 
     public OpCodes getOpCode() {

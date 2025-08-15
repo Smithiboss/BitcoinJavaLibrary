@@ -2,6 +2,7 @@ package org.example.tx;
 
 import org.example.Utils.Bytes;
 import org.example.Utils.Helper;
+import org.example.ecc.Hex;
 import org.example.script.Op;
 
 import java.io.*;
@@ -37,9 +38,10 @@ public class TxFetcher {
      * @return
      */
     public static Tx fetch(String txId, boolean testnet) {
+        String txId64 = Helper.zfill(64, txId);
         String rawTx = null;
-        if (!cache.containsKey(txId)) {
-            String url = getUrl(testnet) + "/tx/" + txId + "/hex/";
+        if (!cache.containsKey(txId64)) {
+            String url = getUrl(testnet) + "/tx/" + txId64 + "/hex";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -55,37 +57,41 @@ public class TxFetcher {
 
                 try {
                     rawTx = response.body().trim();
+                    log.info(rawTx);
                 } catch (IllegalArgumentException e) {
                     throw new IOException("Invalid hex: " + response.body());
                 }
 
                 Tx tx;
                 byte[] rawBytes = Bytes.hexStringToByteArray(rawTx);
-                if ((rawBytes[4] & 0xFF) == 0) {
-                    byte[] trimmed = new byte[rawBytes.length - 2];
-                    System.arraycopy(rawBytes, 0, trimmed, 0, 4);
-                    System.arraycopy(rawBytes, 6, trimmed, 4, rawBytes.length - 6);
+                if (rawBytes[4] == 0) {
+                    log.info("yes");
+                    rawBytes = Bytes.concat(Arrays.copyOfRange(rawBytes, 0, 4), Arrays.copyOfRange(rawBytes, 6, rawBytes.length));
 
-                    tx = Tx.parseLegacy(new ByteArrayInputStream(trimmed), testnet);
-                    byte[] lockTimeBytes = Arrays.copyOfRange(rawBytes, rawBytes.length - 4, rawBytes.length);
-                    tx.setLockTime(Helper.littleEndianToInt(lockTimeBytes));
+                    tx = Tx.parseLegacy(new ByteArrayInputStream(rawBytes), testnet);
+                    var locktime = Hex.parse(Bytes.reverseOrder(Arrays.copyOfRange(rawBytes, rawBytes.length - 4, rawBytes.length)));
+                    tx.setLockTime(locktime);
                 } else {
                     tx = Tx.parseLegacy(new ByteArrayInputStream(rawBytes), testnet);
                 }
 
-                if (!tx.getId().equals(txId)) {
-                    throw new IOException("Transaction ID mismatch: " + tx.getId() + " vs " + txId);
+                log.info(tx.toString());
+
+                if (tx.getId().equals(txId64)) {
+                    throw new IOException("Transaction ID mismatch: " + tx.getId() + " vs " + txId64);
                 }
                 if (cache != null) {
-                    cache.put(txId, rawTx);
+                    cache.put(txId64, rawTx);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } else {
-            rawTx = cache.get(txId);
+            rawTx = cache.get(txId64);
         }
-        return Tx.parseLegacy(rawTx, testnet);
+        var txBytes = Bytes.hexStringToByteArray(rawTx);
+        Tx tx = Tx.parseLegacy(txBytes, testnet);
+        return tx;
     }
 
     /**

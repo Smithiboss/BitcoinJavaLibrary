@@ -168,6 +168,27 @@ public class Script {
             } else if (cmd.isElement()) {
                 // add the element to the stack
                 stack.push(cmd.getElement());
+                if (new Script(cmdsCopy).isP2shScriptPubkey()) {
+                    // remove OP_HASH160
+                    cmdsCopy.removeFirst();
+                    // get 20 byte hash value
+                    var h160 = cmdsCopy.removeFirst();
+                    // remove OP_EQUAL
+                    cmdsCopy.removeFirst();
+                    // run OP_HASH160
+                    if (!Op.opHash160(stack)) return false;
+                    // push 20 byte hash to the stack
+                    stack.push(h160.getElement());
+                    // run OP_EQUAL
+                    if (!Op.opEqual(stack)) return false;
+                    // should be a 1 remaining, check with OP_VERIFY
+                    if (!Op.opVerify(stack)) return false;
+                    // for parsing the redeem script, append the length
+                    var redeemScript = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+                    var stream = new ByteArrayInputStream(redeemScript);
+                    // extend the command set with the parsed commands from the redeem script
+                    cmdsCopy.addAll(Script.parse(stream).cmds);
+                }
             }
         }
         // return false if stack is empty
@@ -182,6 +203,16 @@ public class Script {
         }
         // else the script succeeded
         return true;
+    }
+
+    /**
+     * Returns whether this is a p2sh script pubkey
+     * @return a {@code boolean}
+     */
+    public boolean isP2shScriptPubkey() {
+        return cmds.size() == 3 && cmds.getFirst().getOpCode().equals(OpCodes.OP_169_HASH160)
+                && cmds.get(1).isElement() && cmds.get(1).getElement().length == 20
+                && cmds.get(2).getOpCode().equals(OpCodes.OP_135_EQUAL);
     }
 
     /**

@@ -9,10 +9,7 @@ import org.example.ecc.S256Point;
 import org.example.ecc.Signature;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class Op {
@@ -448,7 +445,59 @@ public class Op {
         }
         log.fine(String.format("%s", printStack(stack)));
         return true;
+    }
 
+    /**
+     * OP_CHECKMULTISIG searches for an ECDSA match for every signature
+     * @param stack
+     * @param z
+     * @return
+     */
+    static boolean opCheckMultiSig(Deque<byte[]> stack, Int z) {
+        if (stack.isEmpty()) return false;
+        // check that stack size matches n + 1 at least
+        var n = decodeNum(stack.pop());
+        if (stack.size() < n + 1) return false;
+        // get all pubkeys from the stack
+        var secPubKeys = new ArrayList<byte[]>();
+        for (int i = 0; i < n; i++) {
+            secPubKeys.add(stack.pop());
+        }
+        // check if stack size matches m + 1 at least
+        var m = decodeNum(stack.pop());
+        if (stack.size() < m + 1) return false;
+        // get all signatures from the stack
+        var derSignatures = new ArrayList<byte[]>();
+        for (int i = 0; i < m; i++) {
+            var derSignature = stack.pop();
+            derSignatures.add(Arrays.copyOf(derSignature, derSignature.length - 1));
+        }
+        // OP_CHECKMULTISIG Bug
+        stack.pop();
+        // parse all points
+        var points = new ArrayList<S256Point>();
+        for (byte[] secPubKey : secPubKeys) {
+            points.add(S256Point.parse(secPubKey));
+        }
+        // parse all signatures
+        var sigs = new ArrayList<Signature>();
+        for (byte[] derSignature : derSignatures) {
+            sigs.add(Signature.parse(derSignature));
+        }
+        // loop over every signature
+        for (Signature sig : sigs) {
+            if (points.isEmpty()) return false;
+            // check if current point works with the signature
+            for (S256Point point : points) {
+                points.remove(point);
+                if (point.verify(z, sig)) {
+                    break;
+                }
+            }
+        }
+        // the signatures a valid, push a 1 to the stack
+        stack.push(encodeNum(1));
+        return true;
     }
 
     /**

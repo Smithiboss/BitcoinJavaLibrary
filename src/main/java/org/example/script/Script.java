@@ -235,5 +235,9 @@ public class Script {
         return String.join(" ", result);
     }
 
+    public List<Cmd> getCmds() {
+        return cmds;
+    }
+
 
 }

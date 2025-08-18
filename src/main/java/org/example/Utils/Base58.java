@@ -105,4 +105,36 @@ public class Base58 {
         // returns the encoded combination of input + checksum in Base58
         return Base58.encode(Bytes.concat(input, checksum));
     }
+
+    /**
+     * Returns the p2pkh address from a h160 hash
+     * @param h160 a {@code byte} array
+     * @param testnet a {@code boolean}
+     * @return a {@link String} object
+     */
+    public static String h160ToP2pkhAddress(byte[] h160, boolean testnet) {
+        byte[] prefix;
+        if (testnet) {
+            prefix = new byte[]{0x6f};
+        } else {
+            prefix = new byte[]{0x00};
+        }
+        return encodeChecksum(Bytes.concat(prefix, h160));
+    }
+
+    /**
+     * Returns the p2sh address from a h160 hash
+     * @param h160 a {@code byte} array
+     * @param testnet a {@code boolean}
+     * @return a {@link String} object
+     */
+    public static String h160ToP2shAddress(byte[] h160, boolean testnet) {
+        byte[] prefix;
+        if (testnet) {
+            prefix = new byte[]{(byte) 0xc4};
+        } else {
+            prefix = new byte[]{0x05};
+        }
+        return encodeChecksum(Bytes.concat(prefix, h160));
+    }
 }

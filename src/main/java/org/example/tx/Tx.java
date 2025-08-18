@@ -138,7 +138,7 @@ public class Tx {
      * @param inputIndex a {@code int}
      * @return a {@link Int} object
      */
-    public Int sigHash(int inputIndex) {
+    public Int sigHash(int inputIndex, Script redeemScript) {
         var stream = new ByteArrayOutputStream();
         // serialize version
         stream.writeBytes(version.toBytesLittleEndian(4));
@@ -151,7 +151,12 @@ public class Tx {
             // check if input index is reached
             if (i == inputIndex) {
                 // copy scriptPubKey from output of previous transaction
-                scriptSig = txIn.scriptPubkey(testnet);
+                if (redeemScript != null) {
+                    // p2sh, replace scriptSig with the redeem script
+                    scriptSig = redeemScript;
+                } else {
+                    scriptSig = txIn.scriptPubkey(testnet);
+                }
             } else {
                 // remove scriptSig
                 scriptSig = null;
@@ -182,8 +187,18 @@ public class Tx {
         var txIn = txIns.get(inputIndex);
         // get the scriptPubkey of previous output
         var scriptPubKey = txIn.scriptPubkey(testnet);
+        Script redeemScript = null;
+        // check if ScriptPubKey is p2sh
+        if (scriptPubKey.isP2shScriptPubkey()) {
+            // get redeem script
+            var cmd = txIn.getScriptSig().getCmds().get(txIn.getScriptSig().getCmds().size() - 1);
+            // add varint
+            var rawRedeem = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+            // parse redeem script
+            redeemScript = Script.parse(new ByteArrayInputStream(rawRedeem));
+        }
         // calculate z
-        var z = sigHash(inputIndex);
+        var z = sigHash(inputIndex, redeemScript);
         // combine Script Signature and Script PubKey
         var combined = txIn.getScriptSig().add(scriptPubKey);
         // evaluate the combined script

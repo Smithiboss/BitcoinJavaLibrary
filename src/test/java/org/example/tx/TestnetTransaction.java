@@ -49,7 +49,7 @@ public class TestnetTransaction {
     }
 
     public void signTransaction(Tx transaction) {
-        var z = transaction.sigHash(0);
+        var z = transaction.sigHash(0, null);
         var privateKey = new PrivateKey(Helper.littleEndianToInt("BeppoIstEinGoofy".getBytes()));
         var der = privateKey.sign(z).der();
         var sig = Bytes.concat(der, Hash.SIGHASH_ALL.toBytes(1));

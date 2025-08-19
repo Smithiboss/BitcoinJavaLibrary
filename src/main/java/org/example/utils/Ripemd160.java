@@ -7,7 +7,7 @@
  *
  */
 
-package org.example.Utils;
+package org.example.utils;
 
 import static java.lang.Integer.rotateLeft;
 import java.util.Arrays;

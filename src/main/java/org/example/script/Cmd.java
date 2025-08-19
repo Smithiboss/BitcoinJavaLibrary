@@ -1,6 +1,6 @@
 package org.example.script;
 
-import org.example.Utils.Bytes;
+import org.example.utils.Bytes;
 
 public class Cmd {
 

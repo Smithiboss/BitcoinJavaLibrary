@@ -1,8 +1,8 @@
 package org.example.script;
 
-import org.example.Utils.Bytes;
-import org.example.Utils.Hash;
-import org.example.Utils.Helper;
+import org.example.utils.Bytes;
+import org.example.utils.Hash;
+import org.example.utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 import org.example.ecc.S256Point;

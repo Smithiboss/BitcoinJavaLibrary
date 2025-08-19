@@ -1,8 +1,8 @@
 package org.example.tx;
 
-import org.example.Utils.Bytes;
-import org.example.Utils.Hash;
-import org.example.Utils.Helper;
+import org.example.utils.Bytes;
+import org.example.utils.Hash;
+import org.example.utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 import org.example.ecc.PrivateKey;
@@ -11,9 +11,7 @@ import org.example.script.Script;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Tx {
@@ -230,7 +228,7 @@ public class Tx {
      * @return a {@code boolean}
      */
     public boolean signInput(int inputIndex, PrivateKey privateKey) {
-        var z = sigHash(inputIndex);
+        var z = sigHash(inputIndex, null);
         // create signature of z and serialize with DER
         var der = privateKey.sign(z).der();
         // append SIGHASH_ALL to der

@@ -1,4 +1,4 @@
-package org.example.Utils;
+package org.example.utils;
 
 import org.example.ecc.Int;
 

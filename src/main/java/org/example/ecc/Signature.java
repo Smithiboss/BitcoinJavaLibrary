@@ -1,6 +1,6 @@
 package org.example.ecc;
 
-import org.example.Utils.Bytes;
+import org.example.utils.Bytes;
 
 import java.io.ByteArrayInputStream;
 

@@ -1,6 +1,6 @@
 package org.example.ecc;
 
-import org.example.Utils.Hash;
+import org.example.utils.Hash;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

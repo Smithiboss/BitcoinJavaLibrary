@@ -1,9 +1,9 @@
 package org.example.tx;
 
-import org.example.Utils.Base58;
-import org.example.Utils.Bytes;
-import org.example.Utils.Hash;
-import org.example.Utils.Helper;
+import org.example.utils.Base58;
+import org.example.utils.Bytes;
+import org.example.utils.Hash;
+import org.example.utils.Helper;
 import org.example.ecc.Hex;
 import org.example.ecc.Int;
 import org.example.ecc.PrivateKey;
@@ -12,7 +12,6 @@ import org.example.script.Op;
 import org.example.script.Script;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 

@@ -1,7 +1,7 @@
 package org.example.tx;
 
-import org.example.Utils.Bytes;
-import org.example.Utils.Helper;
+import org.example.utils.Bytes;
+import org.example.utils.Helper;
 import org.example.ecc.Hex;
 import org.example.script.Op;
 

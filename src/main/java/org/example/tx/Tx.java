@@ -276,6 +276,19 @@ public class Tx {
     }
 
     /**
+     * Returns the height of the block / the height of this coinbase transaction
+     * @return a {@link Int} object
+     */
+    public Int coinbaseHeight() {
+        // if the transaction is not a coinbase transaction, it has no coinbase height
+        if (!this.isCoinBase()) return null;
+        // get the first element of the coinbase ScriptSig as it is the height of the block
+        var element = txIns.getFirst().getScriptSig().getCmds().getFirst();
+        // the height is interpreted as little endian
+        return Hex.parse(Bytes.reverseOrder(element.getElement()));
+    }
+
+    /**
      * Returns a human-readable hexadecimal of the transaction hash
      * @return a {@link String} object
      */

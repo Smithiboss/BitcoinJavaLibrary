@@ -261,6 +261,21 @@ public class Tx {
     }
 
     /**
+     * Returns whether this transaction is a coinbase transaction
+     * @return a {@code boolean}
+     */
+    public boolean isCoinBase() {
+        // transaction can only have one input
+        if (txIns.size() != 1) return false;
+        var input = txIns.getFirst();
+        // the input must have a previous transaction of 32 zero bytes
+        if (input.getPrevTx().ne(Hex.parse("0000000000000000000000000000000000000000000000000000000000000000")))
+            return false;
+        // the input must have a previous index of 0xffffffff
+        return !input.getPrevIndex().ne(Hex.parse("ffffffff"));
+    }
+
+    /**
      * Returns a human-readable hexadecimal of the transaction hash
      * @return a {@link String} object
      */

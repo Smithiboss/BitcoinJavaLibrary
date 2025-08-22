@@ -1,5 +1,8 @@
 package org.example.utils;
 
+import org.example.ecc.Hex;
+import org.example.ecc.Int;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -68,6 +71,20 @@ public class Bytes {
         byte[] result = new byte[bytes.length - start];
         System.arraycopy(bytes, start, result, 0, result.length);
         return result;
+    }
+
+    /**
+     * Returns target from bits
+     * @param bits a {@code byte} array
+     * @return a {@link Int} object
+     */
+    public static Int bitsToTarget(byte[] bits) {
+        // exponent is the last byte
+        var exponent = Hex.parse(Arrays.copyOfRange(bits, bits.length - 1, bits.length));
+        // coefficient are the first 3 bytes
+        var coefficient = Helper.littleEndianToInt(Arrays.copyOfRange(bits, 0, bits.length - 1));
+        // return coefficient * 256 ** (exponent - 3)
+        return coefficient.mul(Int.parse(256).pow(exponent.sub(Int.parse(3))));
     }
 
     /**

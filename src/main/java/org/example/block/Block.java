@@ -2,18 +2,20 @@ package org.example.block;
 
 import org.example.ecc.Int;
 import org.example.utils.Bytes;
+import org.example.utils.Hash;
 import org.example.utils.Helper;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 
 public class Block {
 
-    private Int version;
-    private byte[] prevBlock;
-    private byte[] merkleRoot;
-    private Int timestamp;
-    private byte[] bits;
-    private byte[] nonce;
+    private final Int version;
+    private final byte[] prevBlock;
+    private final byte[] merkleRoot;
+    private final Int timestamp;
+    private final byte[] bits;
+    private final byte[] nonce;
 
     public Block(Int version, byte[] prevBlock, byte[] merkleRoot, Int timestamp, byte[] bits, byte[] nonce) {
         this.version = version;
@@ -43,7 +45,40 @@ public class Block {
         // nonce is 4 bytes
         var nonce = Bytes.read(stream, 4);
         return new Block(version, prevBlock, merkleRoot, timestamp, bits, nonce);
+    }
 
+    /**
+     * Serialize
+     * @return a {@code byte} array
+     */
+    public byte[] serialize() {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        // version is 4 bytes little endian
+        result.writeBytes(version.toBytesLittleEndian(4));
+        // prevBlock is 32 bytes little endian
+        result.writeBytes(Bytes.reverseOrder(prevBlock));
+        // merkleRoot is 32 bytes little endian
+        result.writeBytes(Bytes.reverseOrder(merkleRoot));
+        // timestamp is 4 bytes little endian
+        result.writeBytes(timestamp.toBytesLittleEndian(4));
+        // bits are 4 bytes
+        result.writeBytes(bits);
+        // nonce is 4 bytes
+        result.writeBytes(nonce);
+        return result.toByteArray();
+    }
+
+    /**
+     * Hash
+     * @return a {@code byte} array
+     */
+    public byte[] hash() {
+        // serialize
+        var s = serialize();
+        // hash256
+        var hash256 = Hash.hash256(s);
+        // reverse bytes
+        return Bytes.reverseOrder(hash256);
     }
 
 }

@@ -81,4 +81,34 @@ public class Block {
         return Bytes.reverseOrder(hash256);
     }
 
+    /**
+     * Returns whether this block supports Bip9
+     * @return a {@code boolean}
+     */
+    public boolean isBip9() {
+        // bip9 is signalled if the first 3 bits are 001
+        // shift 29 to the right, leaving the first 3 bits
+        return version.intValue() >> 29 == 0b001;
+    }
+
+    /**
+     * Returns whether this block supports Bip91
+     * @return a {@code boolean}
+     */
+    public boolean isBip91() {
+        // bip91 is signalled if the 5th last bit is 1
+        // shift 4 to the right, leaving the first 28 bits. Bitwise AND checking for 1
+        return (version.intValue() >> 4 & 1) == 1;
+    }
+
+    /**
+     * Returns whether this block supports Bip141
+     * @return a {@code boolean}
+     */
+    public boolean isBip141() {
+        // bip9 is signalled if the 2nd last bit is 1
+        // shift 1 to the right, leaving the first 31 bits. Bitwise AND checking for 1
+        return (version.intValue() >> 1 & 1) == 1;
+    }
+
 }

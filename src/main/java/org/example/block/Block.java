@@ -1,5 +1,6 @@
 package org.example.block;
 
+import org.example.ecc.Hex;
 import org.example.ecc.Int;
 import org.example.utils.Bytes;
 import org.example.utils.Hash;
@@ -109,6 +110,33 @@ public class Block {
         // bip9 is signalled if the 2nd last bit is 1
         // shift 1 to the right, leaving the first 31 bits. Bitwise AND checking for 1
         return (version.intValue() >> 1 & 1) == 1;
+    }
+
+    /**
+     * Returns the proof of work target
+     * @return a {@link Int} object
+     */
+    public Int target() {
+        return Bytes.bitsToTarget(bits);
+    }
+
+    /**
+     * Returns the difficulty
+     * @return a {@link Int} object
+     */
+    public Int difficulty() {
+        var lowest = Hex.parse("ffff").mul(Int.parse(256).pow(Hex.parse("1d").sub(Int.parse(3))));
+        return lowest.div(target());
+    }
+
+    /**
+     * Check for valid proof of work
+     * @return a {@code boolean}
+     */
+    public boolean checkProofOfWork() {
+        var hash = Hash.hash256(serialize());
+        var proof = Helper.littleEndianToInt(hash);
+        return proof.lt(target());
     }
 
 }

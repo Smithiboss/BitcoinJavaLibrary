@@ -11,6 +11,8 @@ public class Bytes {
 
     private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 
+    public static final Int TWO_WEEKS = Int.parse(60 * 60 * 24 * 7);
+
     private Bytes() {}
 
     /**
@@ -85,6 +87,53 @@ public class Bytes {
         var coefficient = Helper.littleEndianToInt(Arrays.copyOfRange(bits, 0, bits.length - 1));
         // return coefficient * 256 ** (exponent - 3)
         return coefficient.mul(Int.parse(256).pow(exponent.sub(Int.parse(3))));
+    }
+
+    /**
+     * Turns a target into bits
+     * @param target a {@link Int} object
+     * @return a {@code byte} array
+     */
+    public static byte[] targetToBits(Int target) {
+        var rawBytes = target.toBytes(32);
+
+        rawBytes = Bytes.lStrip(rawBytes);
+        int exponent;
+        byte[] coefficient;
+        // if the first bit in the coefficient is 1, the bits field is negative
+        if (((rawBytes[0] >> 8) & 1) == 1) {
+            // since target is positive, shift everything over by 1 byte
+            exponent = rawBytes.length + 1;
+            coefficient = Bytes.concat(new byte[]{0x00}, Arrays.copyOfRange(rawBytes, 0, 2));
+        } else {
+            // otherwise, we can show the first 3 bytes
+            // exponent is the number of digits in base-256
+            exponent = rawBytes.length;
+            // coefficient is the first 3 digits of the base-256 number
+            coefficient = Arrays.copyOfRange(rawBytes, 0, 3);
+        }
+        return Bytes.concat(Bytes.reverseOrder(coefficient), new byte[]{(byte) exponent});
+    }
+
+    /**
+     * Calculates the new target bits with a given 2016-block time differential and the previous target bits
+     * @param previousBits a {@code byte} array
+     * @param timeDifferential a {@link Int} object
+     * @return a {@code byte} array
+     */
+    public static byte[] calculateNewBits(byte[] previousBits, Int timeDifferential) {
+        // if time dif is greater than 8 weeks, set to 8 weeks
+        if (timeDifferential.gt(TWO_WEEKS.mul(Int.parse(4)))) {
+            timeDifferential =  TWO_WEEKS.mul(Int.parse(4));
+        }
+        // if time dif is less than half a week, set to half a week
+        if (timeDifferential.lt(TWO_WEEKS.div(Int.parse(4)))) {
+            timeDifferential =  TWO_WEEKS.div(Int.parse(4));
+        }
+        // calculate the new target
+        var newTarget = Bytes.bitsToTarget(previousBits).mul(timeDifferential).div(TWO_WEEKS);
+        // convert the new target to bits
+        return targetToBits(newTarget);
     }
 
     /**

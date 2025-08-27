@@ -2,7 +2,11 @@ package org.example.network;
 
 import org.example.ecc.Hex;
 import org.example.utils.Bytes;
+import org.example.utils.Hash;
+import org.example.utils.Helper;
 
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class NetworkEnvelope {
@@ -24,6 +28,44 @@ public class NetworkEnvelope {
         } else {
             magic = NETWORK_MAGIC;
         }
+    }
+
+    /**
+     * Parse
+     * @param s a {@link ByteArrayInputStream}
+     * @param testnet a {@code boolean1}
+     * @return a {@link NetworkEnvelope} object
+     */
+    public static NetworkEnvelope parse(ByteArrayInputStream s, boolean testnet) {
+        // get magic
+        var magic = Bytes.read(s, 4);
+        byte[] expectedMagic;
+        // compare magic with magic based on given testnet value
+        if (testnet) {
+            expectedMagic = TESTNET_NETWORK_MAGIC;
+        } else {
+            expectedMagic = NETWORK_MAGIC;
+        }
+        if (Arrays.compareUnsigned(expectedMagic, magic) != 0) {
+            throw new IllegalArgumentException("Invalid magic number");
+        }
+        // get command
+        var command = Bytes.read(s, 12);
+        // remove trailing zero bytes
+        command = Bytes.strip(command);
+        // get payload length
+        var payloadLength = Helper.littleEndianToInt(Bytes.read(s, 4));
+        // get checksum
+        var checksum =Bytes.read(s, 4);
+        // get payload based on its length
+        var payload = Bytes.read(s, payloadLength.intValue());
+        // calculate the checksum by taking the first 4 bytes of the hash256 of the payload
+        var calculatedChecksum = Arrays.copyOfRange(Hash.hash256(payload), 0, 4);
+        // compare checksums
+        if (Arrays.compare(checksum, calculatedChecksum) != 0) {
+            throw new IllegalArgumentException("Invalid checksum");
+        }
+        return new NetworkEnvelope(command, payload, testnet);
     }
 
     /**

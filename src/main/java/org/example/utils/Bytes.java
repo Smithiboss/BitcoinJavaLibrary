@@ -59,6 +59,20 @@ public class Bytes {
     }
 
     /**
+     * Remove trailing zero bytes
+     * @param bytes a {@code byte} array
+     * @return a {@code byte} array
+     */
+    public static byte[] strip(byte[] bytes) {
+        var bytesReversed = Bytes.reverseOrder(bytes);
+        int i = 0;
+        while(bytesReversed[i] == (byte) 0x00) {
+            i++;
+        }
+        return Arrays.copyOfRange(bytes, 0, bytes.length - i);
+    }
+
+    /**
      * Removes leading {@code bytes} "0x00" from given {@code byte} array
      * @param bytes a {@code byte} array
      * @return a {@code byte} array

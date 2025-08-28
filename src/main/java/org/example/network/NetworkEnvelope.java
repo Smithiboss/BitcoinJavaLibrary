@@ -1,11 +1,13 @@
 package org.example.network;
 
 import org.example.ecc.Hex;
+import org.example.ecc.Int;
 import org.example.utils.Bytes;
 import org.example.utils.Hash;
 import org.example.utils.Helper;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -66,6 +68,26 @@ public class NetworkEnvelope {
             throw new IllegalArgumentException("Invalid checksum");
         }
         return new NetworkEnvelope(command, payload, testnet);
+    }
+
+    /**
+     * Serialize
+     * @param out a {@link ByteArrayOutputStream}
+     * @return a {@code byte} array
+     */
+    public byte[] serialize(ByteArrayOutputStream out) {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        // add network magic - 4 bytes
+        result.writeBytes(magic);
+        // add command with zero byte trailing - 12 bytes
+        result.writeBytes(Bytes.concat(command, Bytes.initFill(12 - command.length, (byte) 0x00)));
+        // add payload length - 4 bytes
+        result.writeBytes(Int.parse(payload.length).toBytesLittleEndian(4));
+        // add checksum - 4 bytes
+        result.writeBytes(Arrays.copyOfRange(Hash.hash256(payload), 0, 4));
+        // add payload
+        result.writeBytes(payload);
+        return result.toByteArray();
     }
 
     /**

@@ -71,6 +71,18 @@ public class NetworkEnvelope {
     }
 
     /**
+     * Parse the length
+     * @param s a {@link ByteArrayInputStream} object
+     * @return a {@code int}
+     */
+    public static int parseLength(ByteArrayInputStream s) {
+        Bytes.read(s, 4);
+        Bytes.read(s, 12);
+        var length = Helper.littleEndianToInt(Bytes.read(s, 4));
+        return length.intValue();
+    }
+
+    /**
      * Serialize
      * @return a {@code byte} array
      */

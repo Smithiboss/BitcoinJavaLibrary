@@ -5,6 +5,7 @@ import org.example.ecc.Int;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class Bytes {
@@ -56,6 +57,17 @@ public class Bytes {
             pos += a.length;
         }
         return result;
+    }
+
+    /**
+     * Returns an array of random bytes of length
+     * @param length a {@code int}
+     * @return a {@code byte} array
+     */
+    public static byte[] randomBytes(int length) {
+        byte[] bytes = new byte[length];
+        new SecureRandom().nextBytes(bytes);
+        return bytes;
     }
 
     /**

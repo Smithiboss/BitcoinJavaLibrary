@@ -7,7 +7,7 @@ import org.example.utils.Helper;
 import java.io.ByteArrayOutputStream;
 import java.util.Objects;
 
-public class VersionMessage {
+public class VersionMessage implements Message {
 
     public static final String COMMAND = "version";
 
@@ -84,6 +84,11 @@ public class VersionMessage {
             result.writeBytes(new byte[]{0x00});
         }
         return result.toByteArray();
+    }
+
+    @Override
+    public byte[] getCommand() {
+        return COMMAND.getBytes();
     }
 
 }

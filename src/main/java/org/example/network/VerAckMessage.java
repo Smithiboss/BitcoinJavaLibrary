@@ -1,6 +1,6 @@
 package org.example.network;
 
-public class VerAckMessage {
+public class VerAckMessage implements Message{
 
     public static final String COMMAND = "verack";
 
@@ -19,6 +19,11 @@ public class VerAckMessage {
      */
     public byte[] serialize() {
         return new byte[0];
+    }
+
+    @Override
+    public byte[] getCommand() {
+        return COMMAND.getBytes();
     }
 
 }

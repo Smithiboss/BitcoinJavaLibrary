@@ -58,7 +58,7 @@ public class NetworkEnvelope {
         // get payload length
         var payloadLength = Helper.littleEndianToInt(Bytes.read(s, 4));
         // get checksum
-        var checksum =Bytes.read(s, 4);
+        var checksum = Bytes.read(s, 4);
         // get payload based on its length
         var payload = Bytes.read(s, payloadLength.intValue());
         // calculate the checksum by taking the first 4 bytes of the hash256 of the payload
@@ -72,10 +72,9 @@ public class NetworkEnvelope {
 
     /**
      * Serialize
-     * @param out a {@link ByteArrayOutputStream}
      * @return a {@code byte} array
      */
-    public byte[] serialize(ByteArrayOutputStream out) {
+    public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         // add network magic - 4 bytes
         result.writeBytes(magic);

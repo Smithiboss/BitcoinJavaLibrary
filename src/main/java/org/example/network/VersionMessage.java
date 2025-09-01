@@ -43,6 +43,11 @@ public class VersionMessage implements Message {
         this.relay = Objects.requireNonNullElse(relay, false);
     }
 
+    public VersionMessage() {
+        this(null, null, null, null, null, null,
+                null, null, null, null, null, null, null);
+    }
+
     /**
      * Serialize
      * @return a {@code byte} array

@@ -1,6 +1,7 @@
 package org.example.network;
 
 import org.example.script.Op;
+import org.example.utils.Bytes;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class SimpleNode {
@@ -86,5 +88,47 @@ public class SimpleNode {
             log.fine("Received %s".formatted(envelope));
         }
         return envelope;
+    }
+
+    /**
+     * Waits for one of the messages in the list
+     * @param commands a {@link Set} of {@link String} objects
+     * @return a {@link NetworkEnvelope} object
+     */
+    public NetworkEnvelope waitFor(Set<String> commands) {
+        String command = "";
+
+        NetworkEnvelope envelope = null;
+
+        while (!commands.contains(command)) {
+            envelope = read();
+            if (envelope != null) {
+                command = Bytes.byteArrayToHexString(envelope.getCommand());
+
+                if (command.equals(VerAckMessage.COMMAND)) {
+                    send(new VerAckMessage());
+                } else if (command.equals(PingMessage.COMMAND)) {
+                    send(new PongMessage(envelope.getPayload()));
+                }
+            } else {
+                break;
+            }
+        }
+
+        return envelope;
+    }
+
+    /**
+     * Performs a handshake with another node
+     * @return a {@code byte} array
+     */
+    public byte[] handshake() {
+        var version = new VersionMessage();
+
+        send(version);
+
+        var envelope = waitFor(Set.of(VerAckMessage.COMMAND));
+
+        return envelope.getPayload();
     }
 }

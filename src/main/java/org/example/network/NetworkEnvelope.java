@@ -101,6 +101,14 @@ public class NetworkEnvelope {
         return result.toByteArray();
     }
 
+    public byte[] getCommand() {
+        return command;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
     /**
      * {@inheritDoc}
      */

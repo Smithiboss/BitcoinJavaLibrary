@@ -8,6 +8,10 @@ import org.example.utils.Helper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 public class Block {
 
@@ -17,14 +21,16 @@ public class Block {
     private final Int timestamp;
     private final byte[] bits;
     private final byte[] nonce;
+    private final List<byte[]> txHashes;
 
-    public Block(Int version, byte[] prevBlock, byte[] merkleRoot, Int timestamp, byte[] bits, byte[] nonce) {
+    public Block(Int version, byte[] prevBlock, byte[] merkleRoot, Int timestamp, byte[] bits, byte[] nonce, List<byte[]> txHashes) {
         this.version = version;
         this.prevBlock = prevBlock;
         this.merkleRoot = merkleRoot;
         this.timestamp = timestamp;
         this.bits = bits;
         this.nonce = nonce;
+        this.txHashes = Objects.requireNonNullElse(txHashes, new ArrayList<>());
     }
 
     /**
@@ -45,7 +51,7 @@ public class Block {
         var bits = Bytes.read(stream, 4);
         // nonce is 4 bytes
         var nonce = Bytes.read(stream, 4);
-        return new Block(version, prevBlock, merkleRoot, timestamp, bits, nonce);
+        return new Block(version, prevBlock, merkleRoot, timestamp, bits, nonce, null);
     }
 
     /**
@@ -137,6 +143,18 @@ public class Block {
         var hash = Hash.hash256(serialize());
         var proof = Helper.littleEndianToInt(hash);
         return proof.lt(target());
+    }
+
+    /**
+     * Validates the merkle root
+     * @return a {@code boolean}
+     */
+    public boolean validateMerkleRoot() {
+        var hashes = txHashes.stream().map(Bytes::reverseOrder).toList();
+
+        var root = Helper.merkleRoot(hashes);
+
+        return Arrays.equals(Bytes.reverseOrder(root), merkleRoot);
     }
 
 }

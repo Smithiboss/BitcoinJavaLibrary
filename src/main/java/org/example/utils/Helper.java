@@ -7,7 +7,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Helper {
 
@@ -101,6 +103,48 @@ public class Helper {
         } else {
             throw new IllegalArgumentException("Integer too large: " + i);
         }
+    }
+
+    /**
+     * Calculates the merkle parent hash with the given child hashes
+     * @param hash1 a {@code byte} array
+     * @param hash2 a {@code byte} array
+     * @return a {@code byte} array
+     */
+    public static byte[] merkleParent(byte[] hash1, byte[] hash2) {
+        return Hash.hash256(Bytes.concat(hash1, hash2));
+    }
+
+    /**
+     * Computes the merkle parent hash
+     * @param hashes a {@code byte} array
+     * @return a {@link List} of {@code byte} arrays
+     */
+    public static List<byte[]> merkleParentLevel(List<byte[]> hashes) {
+        if (hashes.size() == 1) throw new IllegalArgumentException("Cannot take a parent level with only 1 item");
+
+        if (hashes.size() % 2 == 1) hashes.add(hashes.getLast());
+
+        var parentLevel = new ArrayList<byte[]>();
+
+        for (int i = 0; i < hashes.size(); i += 2) {
+            var parent = merkleParent(hashes.get(i), hashes.get(i + 1));
+            parentLevel.add(parent);
+        }
+        return parentLevel;
+    }
+
+    /**
+     * Computes the merkle root of given hashes
+     * @param hashes  {@link List} of {@code byte} arrays
+     * @return a {@code byte} array
+     */
+    public static byte[] merkleRoot(List<byte[]> hashes) {
+        var currentLevel = hashes;
+
+        while (currentLevel.size() > 1) currentLevel = merkleParentLevel(currentLevel);
+
+        return currentLevel.getFirst();
     }
 
     /**

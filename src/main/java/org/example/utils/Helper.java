@@ -162,4 +162,14 @@ public class Helper {
         return String.format("%" + length + "s", bytes).replace(' ', '0');
     }
 
+    /**
+     * Computes log with given base
+     * @param x a {@code double}
+     * @param base a {@code double}
+     * @return a {@code double}
+     */
+    public static double log(double x, double base) {
+        return Math.log(x) / Math.log(base);
+    }
+
 }

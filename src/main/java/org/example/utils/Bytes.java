@@ -6,7 +6,9 @@ import org.example.ecc.Int;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Bytes {
 
@@ -160,6 +162,29 @@ public class Bytes {
         var newTarget = Bytes.bitsToTarget(previousBits).mul(timeDifferential).div(TWO_WEEKS);
         // convert the new target to bits
         return targetToBits(newTarget);
+    }
+
+    /**
+     * Converts a {@code byte} array to an array of bits
+     * @param someBytes a {@code byte} array
+     * @return a {@code byte} array
+     */
+    public static byte[] bytesToBitField(byte[] someBytes) {
+        List<Byte> flagBits = new ArrayList<>();
+
+        for (byte b : someBytes) {
+            for (int i = 0; i < 8; i++) {
+                flagBits.add((byte) (b & 1));
+                b >>= 1;
+            }
+        }
+
+        var result = new byte[flagBits.size()];
+        for (int i = 0; i < flagBits.size(); i++) {
+            result[i] = (byte) flagBits.get(i);
+        }
+
+        return result;
     }
 
     /**

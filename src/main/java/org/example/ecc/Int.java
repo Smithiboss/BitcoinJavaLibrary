@@ -206,7 +206,7 @@ public class Int {
      * @return byte array
      */
     public byte[] toBytesLittleEndian() {
-        return Bytes.reverseOrder(toBytesLittleEndian(bigIntLength));
+        return Bytes.reverseOrder(toBytes(bigIntLength));
     }
 
     /**

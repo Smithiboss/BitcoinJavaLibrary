@@ -1,16 +1,14 @@
 package org.example.spv;
 
-import org.example.ecc.Int;
 import org.example.utils.Helper;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MerkleTree {
 
     private final int total;
     private final int maxDepth;
-    private final List<Int[]> nodes;
+    private final List<List<byte[]>> nodes;
     private int currentDepth;
     private int currentIndex;
 
@@ -21,7 +19,7 @@ public class MerkleTree {
 
         for (int depth = 0; depth < maxDepth + 1; depth++) {
             var numItems = (int) Math.ceil(this.total / Math.pow(2, this.maxDepth - depth));
-            var levelHashes = new Int[numItems];
+            List<byte[]> levelHashes = new ArrayList<>(Collections.nCopies(numItems, null));
             nodes.add(levelHashes);
         }
         
@@ -44,24 +42,24 @@ public class MerkleTree {
         currentIndex = currentIndex * 2 + 1;
     }
 
-    public Int root() {
-        return nodes.getFirst()[0];
+    public byte[] root() {
+        return nodes.getFirst().getFirst();
     }
 
-    public void setCurrentNode(Int value) {
-        nodes.get(currentDepth)[currentIndex] = value;
+    public void setCurrentNode(byte[] value) {
+        nodes.get(currentDepth).set(currentIndex, value);
     }
 
-    public Int getCurrentNode() {
-        return nodes.get(currentDepth)[currentIndex];
+    public byte[] getCurrentNode() {
+        return nodes.get(currentDepth).get(currentIndex);
     }
 
-    public Int getLeftNode() {
-        return nodes.get(currentDepth + 1)[currentIndex * 2];
+    public byte[] getLeftNode() {
+        return nodes.get(currentDepth + 1).get(currentIndex * 2);
     }
 
-    public Int getRightNode() {
-        return nodes.get(currentDepth + 1)[currentIndex * 2 + 1];
+    public byte[] getRightNode() {
+        return nodes.get(currentDepth + 1).get(currentIndex * 2 + 1);
     }
 
     public boolean isLeaf() {
@@ -69,7 +67,57 @@ public class MerkleTree {
     }
 
     public boolean rightExists() {
-        return nodes.get(currentDepth + 1).length > currentIndex * 2 + 1;
+        return nodes.get(currentDepth + 1).size() > currentIndex * 2 + 1;
+    }
+
+    /**
+     * Populates the tree with given hashes using flag bits
+     * @param flagBitsArray a {@code byte} array
+     * @param hashesList a {@code byte} array
+     */
+    public void populateTree(byte[] flagBitsArray, List<byte[]> hashesList) {
+        Deque<Byte> flagBits = new ArrayDeque<>();
+        for (byte b : flagBitsArray) {
+            flagBits.push(b);
+        }
+        Deque<byte[]> hashes = new ArrayDeque<>(hashesList);
+
+        while (root() == null) {
+            if (isLeaf()) {
+                flagBits.pop();
+                setCurrentNode(hashes.pop());
+                up();
+            } else {
+                var leftHash = getLeftNode();
+                if (leftHash == null) {
+                    if (flagBits.pop() == 0) {
+                        setCurrentNode(hashes.pop());
+                        up();
+                    } else {
+                        left();
+                    }
+                } else if (rightExists()) {
+                    var rightHash = getRightNode();
+                    if (rightHash == null) {
+                        right();
+                    } else {
+                        setCurrentNode(Helper.merkleParent(leftHash, rightHash));
+                        up();
+                    }
+                } else {
+                    setCurrentNode(Helper.merkleParent(leftHash, leftHash));
+                    up();
+                }
+            }
+        }
+        if (!hashes.isEmpty()) {
+            throw new IllegalStateException("Not all hashes were consumed");
+        }
+        for (Byte flagBit : flagBits) {
+            if (flagBit != 0) {
+                throw new IllegalStateException("Not all flag bits were consumed");
+            }
+        }
     }
 
 

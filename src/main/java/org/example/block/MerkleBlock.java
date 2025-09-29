@@ -1,12 +1,15 @@
 package org.example.block;
 
 import org.example.ecc.Int;
+import org.example.spv.MerkleTree;
 import org.example.utils.Bytes;
 import org.example.utils.Helper;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MerkleBlock {
 
@@ -66,6 +69,23 @@ public class MerkleBlock {
         var flags = Bytes.read(s, flagsLength.intValue());
 
         return new MerkleBlock(version, prevBlock, merkleRoot, timestamp, bits, nonce, total, hashes, flags);
+    }
+
+    /**
+     * Verifies whether the merkle tree information validates the merkle root
+     * @return a {@code boolean}
+     */
+    public boolean isValid() {
+
+        var flagBits = Bytes.bytesToBitField(flags);
+
+        var h = hashes.stream().map(Bytes::reverseOrder).toList();
+
+        var merkleTree = new MerkleTree(total);
+
+        merkleTree.populateTree(flagBits, h);
+
+        return Arrays.equals(merkleTree.root(), Bytes.reverseOrder(merkleRoot));
     }
 
 

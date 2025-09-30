@@ -93,7 +93,7 @@ public class Block {
      * @return a {@code boolean}
      */
     public boolean isBip9() {
-        // bip9 is signalled if the first 3 bits are 001
+        // bip9 is signaled if the first 3 bits are 001
         // shift 29 to the right, leaving the first 3 bits
         return version.intValue() >> 29 == 0b001;
     }
@@ -103,7 +103,7 @@ public class Block {
      * @return a {@code boolean}
      */
     public boolean isBip91() {
-        // bip91 is signalled if the 5th last bit is 1
+        // bip91 is signaled if the 5th last bit is 1
         // shift 4 to the right, leaving the first 28 bits. Bitwise AND checking for 1
         return (version.intValue() >> 4 & 1) == 1;
     }
@@ -113,7 +113,7 @@ public class Block {
      * @return a {@code boolean}
      */
     public boolean isBip141() {
-        // bip9 is signalled if the 2nd last bit is 1
+        // bip9 is signaled if the 2nd last bit is 1
         // shift 1 to the right, leaving the first 31 bits. Bitwise AND checking for 1
         return (version.intValue() >> 1 & 1) == 1;
     }

@@ -59,8 +59,6 @@ public class Script {
     public static Script parse(ByteArrayInputStream s) {
         // get length of entire script
         Int length = Helper.readVarint(s);
-        System.out.println("length: " + length);
-
         var cmds = new ArrayList<Cmd>();
         // keep track of the current position inside the stream
         var count = 0;
@@ -104,7 +102,7 @@ public class Script {
         for (Cmd cmd : this.cmds) {
             if (cmd.isOpCode()) {
                 result.writeBytes(cmd.getOpCode().getCode().toBytesLittleEndian(1));
-            } else if (cmd.isElement()) {
+            } else {
 
                 var length = cmd.getElement().length;
 
@@ -115,13 +113,14 @@ public class Script {
                     // OP_PUSHDATA1
                     result.writeBytes(Int.parse(76).toBytesLittleEndian(1));
                     result.writeBytes(Int.parse(length).toBytesLittleEndian(1));
-                } else if (length > 0x100 && length <= 520) {
+                } else if (length >= 0x100 && length <= 520) {
                     // OP_PUSHDATA2
                     result.writeBytes(Int.parse(77).toBytesLittleEndian(1));
                     result.writeBytes(Int.parse(length).toBytesLittleEndian(2));
                 } else {
                     throw new IllegalStateException("Too long cmd: " + length);
                 }
+                result.writeBytes(cmd.getElement());
             }
         }
         return result.toByteArray();
@@ -157,7 +156,7 @@ public class Script {
             var cmd = cmdsCopy.removeFirst();
             // check if cmd is an opcode
             if (cmd.isOpCode()) {
-                // call operation method, will return a boolean
+                // call operation method will return a boolean
                 var operationResult = Op.operation(cmd.getOpCode(), stack, altStack, cmdsCopy, z);
                 // terminate if false
                 if (!operationResult) {
@@ -177,11 +176,11 @@ public class Script {
                     cmdsCopy.removeFirst();
                     // run OP_HASH160
                     if (!Op.opHash160(stack)) return false;
-                    // push 20 byte hash to the stack
+                    // push 20 bytes to the stack
                     stack.push(h160.getElement());
                     // run OP_EQUAL
                     if (!Op.opEqual(stack)) return false;
-                    // should be a 1 remaining, check with OP_VERIFY
+                    // should be a 1 remaining check with OP_VERIFY
                     if (!Op.opVerify(stack)) return false;
                     // for parsing the redeem script, append the length
                     var redeemScript = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
@@ -191,7 +190,7 @@ public class Script {
                 }
             }
         }
-        // return false if stack is empty
+        // return false if the stack is empty
         if (stack.isEmpty()) {
             log.warning("Script evaluation failed! Stack is empty!");
             return false;

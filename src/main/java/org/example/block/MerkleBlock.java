@@ -85,9 +85,42 @@ public class MerkleBlock {
 
         merkleTree.populateTree(flagBits, h);
 
-        return Arrays.equals(merkleTree.root(), Bytes.reverseOrder(merkleRoot));
+        return Arrays.equals(merkleRoot, Bytes.reverseOrder(merkleTree.root()));
     }
 
+    public Int getVersion() {
+        return version;
+    }
 
+    public byte[] getPrevBlock() {
+        return prevBlock;
+    }
 
+    public byte[] getMerkleRoot() {
+        return merkleRoot;
+    }
+
+    public Int getTimestamp() {
+        return timestamp;
+    }
+
+    public byte[] getBits() {
+        return bits;
+    }
+
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public List<byte[]> getHashes() {
+        return hashes;
+    }
+
+    public byte[] getFlags() {
+        return flags;
+    }
 }

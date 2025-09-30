@@ -181,7 +181,7 @@ public class Bytes {
 
         var result = new byte[flagBits.size()];
         for (int i = 0; i < flagBits.size(); i++) {
-            result[i] = (byte) flagBits.get(i);
+            result[i] = flagBits.get(i);
         }
 
         return result;

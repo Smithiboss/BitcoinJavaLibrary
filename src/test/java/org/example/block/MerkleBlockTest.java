@@ -1,13 +1,11 @@
 package org.example.block;
 
 import org.example.ecc.Hex;
-import org.example.utils.Bytes;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MerkleBlockTest {
 

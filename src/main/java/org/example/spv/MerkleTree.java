@@ -12,6 +12,10 @@ public class MerkleTree {
     private int currentDepth;
     private int currentIndex;
 
+    /**
+     * Constructs a Merkle tree with the given number of total transactions
+     * @param total a {@code int}
+     */
     public MerkleTree(int total) {
         this.total = total;
         // calculate max depth
@@ -123,30 +127,46 @@ public class MerkleTree {
         }
         Deque<byte[]> hashes = new ArrayDeque<>(hashesList);
 
+        // populate the tree until we have the root
         while (root() == null) {
+            // if the current node is a leaf, set its value to the next hash
             if (isLeaf()) {
+                // get the next flag bit and the next hash
                 flagBits.pop();
                 setCurrentNode(hashes.pop());
+                // go up a level
                 up();
             } else {
+                // get the left hash
                 var leftHash = getLeftNode();
+                // if the left hash is null
                 if (leftHash == null) {
+                    // if the flag bit is 0, we set the current node to the next hash
                     if (flagBits.pop() == 0) {
                         setCurrentNode(hashes.pop());
+                        // skip subtree as it does not need calculation
                         up();
                     } else {
+                        // go to the left child of the current node
                         left();
                     }
                 } else if (rightExists()) {
+                    // get the right hash
                     var rightHash = getRightNode();
+                    // if the right hash is null
                     if (rightHash == null) {
+                        // go to the right child
                         right();
                     } else {
+                        // combine the left and right hashes and set the current node to the combined hash
                         setCurrentNode(Helper.merkleParent(leftHash, rightHash));
+                        // go up a level
                         up();
                     }
                 } else {
+                    // left hash exists but there is no right node, so we combine the left hash twice
                     setCurrentNode(Helper.merkleParent(leftHash, leftHash));
+                    // go up a level
                     up();
                 }
             }

@@ -38,7 +38,8 @@ public class PointTest {
 
         Point p1 = new Point(x1, y1, a, b);
         Point res = new Point(null, null, a, b);
-        assertTrue(res.eq(p1.mul(Int.parse("7"))));
+        assertTrue(res.eq(p1.mul(Int.parse("7"))
+        ));
     }
 
 }

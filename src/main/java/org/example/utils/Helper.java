@@ -79,7 +79,7 @@ public class Helper {
         // 0xff means the next eight bytes are the number. The number is between 2^32 and 2^64-1
         else if (prefix == (byte) 0xff) return littleEndianToInt(Bytes.read(s, 8));
         // if the prefix is smaller than 253 (0xfd), it is just the integer
-        else return Hex.parse(prefix);
+        else return Hex.parse(new byte[]{prefix});
     }
 
     /**

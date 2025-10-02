@@ -77,7 +77,7 @@ public class TxFetcher {
 
                 log.info(tx.toString());
 
-                if (tx.getId().equals(txId64)) {
+                if (!tx.getId().equals(txId64)) {
                     throw new IOException("Transaction ID mismatch: " + tx.getId() + " vs " + txId64);
                 }
                 if (cache != null) {

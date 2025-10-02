@@ -37,7 +37,7 @@ public class secp256K1Test {
         Point G = new Point(x, y, zero, seven);
         Point res = new Point(null, null, zero, seven);
 
-        assertEquals(res, G.rMul(n));
+        assertTrue(res.eq(G.mul(n)));
     }
 
     @Test
@@ -51,7 +51,7 @@ public class secp256K1Test {
         FieldElement a = new FieldElement(Int.parse(0), p);
         FieldElement b = new FieldElement(Int.parse(7), p);
 
-        assertEquals(y.pow(Int.parse(2)), x.pow(Int.parse(3)).add(a.mul(x)).add(b));
+        assertTrue(y.pow(Int.parse(2)).eq(x.pow(Int.parse(3)).add(a.mul(x)).add(b)));
     }
 
     @Test
@@ -64,7 +64,7 @@ public class secp256K1Test {
 
         S256Point infinity = new S256Point(null, null);
 
-        assertEquals(infinity, G.rMul(n));
+        assertTrue(infinity.eq(G.mul(n)));
 
     }
 
@@ -85,7 +85,7 @@ public class secp256K1Test {
         var u = z.mul(s_inv).mod(n);
         var v = r.mul(s_inv).mod(n);
 
-        assertEquals(G.rMul(u).add(point.rMul(v)).getX().getNum(), r);
+        assertEquals(((S256Field) G.mul(u).add(point.mul(v)).getX()).getNum(), r);
     }
 
     @Test
@@ -104,7 +104,7 @@ public class secp256K1Test {
         var z = Hex.parse(SHA256Hasher.hash("my message"));
         PrivateKey privateKey = new PrivateKey(e);
         Signature sig = privateKey.sign(z);
-        S256Point point = S256Point.G.rMul(e);
+        S256Point point = S256Point.G.mul(e);
 
         assertTrue(point.verify(z, sig));
     }

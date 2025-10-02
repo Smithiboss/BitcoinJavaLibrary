@@ -15,7 +15,7 @@ public class PrivateKey {
 
     public PrivateKey(Int secret) {
         this.secret = secret;
-        this.pubKey = S256Point.G.rMul(secret);
+        this.pubKey = S256Point.G.mul(secret);
     }
 
     /**
@@ -30,7 +30,7 @@ public class PrivateKey {
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);
         }
-        Int r = S256Point.G.rMul(k).getX().getNum();
+        Int r = ((S256Field) S256Point.G.mul(k).getX()).getNum();
         Int kInv = k.modPow(S256Point.N.sub(Int.parse(2)), S256Point.N);
         Int s = (z.add(r.mul(this.secret))).mul(kInv).mod(S256Point.N);
         if (s.compareTo(S256Point.N.div(Int.parse(2))) > 0) {

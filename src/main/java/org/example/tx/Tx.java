@@ -184,7 +184,7 @@ public class Tx {
     public boolean verifyInput(int inputIndex) {
         var txIn = txIns.get(inputIndex);
         // get the scriptPubkey of previous output
-        var scriptPubKey = txIn.scriptPubkey(testnet);
+        var scriptPubKey = txIn.scriptPubkey(this.testnet);
         Script redeemScript = null;
         // check if ScriptPubKey is p2sh
         if (scriptPubKey.isP2shScriptPubkey()) {
@@ -209,7 +209,7 @@ public class Tx {
      */
     public boolean verify() {
         // check that the transaction is not creating coins
-        if (fee(this.testnet).lt(Int.parse(0))) {
+        if (fee().lt(Int.parse(0))) {
             return false;
         }
         // check that every input has a valid scriptSig
@@ -245,17 +245,16 @@ public class Tx {
 
     /**
      * Calculates the fee
-     * @param testnet a {@code boolean}
      * @return a {@link Int} object
      */
-    public Int fee(boolean testnet) {
+    public Int fee() {
         var inputSum = Int.parse(0);
         var outputSum = Int.parse(0);
         for (TxIn txIn : txIns) {
-            inputSum.add(txIn.value(testnet));
+            inputSum = inputSum.add(txIn.value(this.testnet));
         }
         for (TxOut txOut : txOuts) {
-            outputSum.add(txOut.amount());
+            outputSum = outputSum.add(txOut.amount());
         }
         return inputSum.sub(outputSum);
     }

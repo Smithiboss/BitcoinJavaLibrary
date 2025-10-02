@@ -12,6 +12,16 @@ public class S256Field extends FieldElement {
     }
 
     @Override
+    public S256Field add(Operators otherOperator) {
+        return new S256Field(super.add(otherOperator).getNum());
+    }
+
+    @Override
+    public S256Field pow(Int divisor) {
+        return new S256Field(super.pow(divisor).getNum());
+    }
+
+    @Override
     public String toString() {
         return null;
     }
@@ -20,7 +30,7 @@ public class S256Field extends FieldElement {
      * square root
      * @return {@link FieldElement}
      */
-    public FieldElement sqrt() {
-        return this.pow(P.add(Int.parse(1)).div(Int.parse(4)));
+    public S256Field sqrt() {
+        return new S256Field(this.pow(P.add(Int.parse(1)).div(Int.parse(4))).getNum());
     }
 }

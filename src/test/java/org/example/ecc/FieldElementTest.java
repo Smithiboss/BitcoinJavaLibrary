@@ -22,14 +22,14 @@ public class FieldElementTest {
     }
 
     @Test
-    public void testEqualsAndHashCode() {
+    public void testEqAndHashCode() {
         FieldElement a = new FieldElement(Int.parse(3), Int.parse(7));
         FieldElement b = new FieldElement(Int.parse(3), Int.parse(7));
         FieldElement c = new FieldElement(Int.parse(4), Int.parse(7));
 
-        assertEquals(a, b);
+        assertTrue(a.eq(b));
         assertEquals(a.hashCode(), b.hashCode());
-        assertNotEquals(a, c);
+        assertFalse(a.eq(c));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class FieldElementTest {
     }
 
     @Test
-    public void testNotEqualsMethod() {
+    public void testNeMethod() {
         FieldElement a = new FieldElement(Int.parse(2), Int.parse(7));
         FieldElement b = new FieldElement(Int.parse(2), Int.parse(7));
         FieldElement c = new FieldElement(Int.parse(3), Int.parse(7));
@@ -54,7 +54,7 @@ public class FieldElementTest {
         FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
         FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
         FieldElement expected = new FieldElement(Int.parse(4), Int.parse(7));
-        assertEquals(expected, a.add(b));
+        assertTrue(expected.eq(a.add(b)));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class FieldElementTest {
         FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
         FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
         FieldElement expected = new FieldElement(Int.parse(6), Int.parse(7));
-        assertEquals(expected, a.sub(b));
+        assertTrue(expected.eq(a.sub(b)));
     }
 
     @Test
@@ -70,14 +70,14 @@ public class FieldElementTest {
         FieldElement a = new FieldElement(Int.parse(5), Int.parse(7));
         FieldElement b = new FieldElement(Int.parse(6), Int.parse(7));
         FieldElement expected = new FieldElement(Int.parse(2), Int.parse(7));
-        assertEquals(expected, a.mul(b));
+        assertTrue(expected.eq(a.mul(b)));
     }
 
     @Test
     public void testPower() {
         FieldElement a = new FieldElement(Int.parse(3), Int.parse(13));
         FieldElement expected = new FieldElement(Int.parse(9), Int.parse(13));
-        assertEquals(expected, a.pow(Int.parse(-4)));
+        assertTrue(expected.eq(a.pow(Int.parse(-4))));
     }
 
     @Test
@@ -85,6 +85,6 @@ public class FieldElementTest {
         FieldElement a = new FieldElement(Int.parse(2), Int.parse(19));
         FieldElement b = new FieldElement(Int.parse(7), Int.parse(19));
         FieldElement expected = new FieldElement(Int.parse(3), Int.parse(19));
-        assertEquals(expected, a.div(b));
+        assertTrue(expected.eq(a.div(b)));
     }
 }

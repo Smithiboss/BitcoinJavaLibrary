@@ -24,7 +24,7 @@ public class PointTest {
         Point p2 = new Point(x2, y2, a, b);
 
         Point res = new Point(new FieldElement(Int.parse("170"), prime), new FieldElement(Int.parse("142"), prime), a, b);
-        assertEquals(res, p1.add(p2));
+        assertTrue(res.eq(p1.add(p2)));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class PointTest {
 
         Point p1 = new Point(x1, y1, a, b);
         Point res = new Point(null, null, a, b);
-        assertEquals(res, p1.rMul(Int.parse("7")));
+        assertTrue(res.eq(p1.mul(Int.parse("7"))));
     }
 
 }

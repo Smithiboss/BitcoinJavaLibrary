@@ -65,22 +65,23 @@ public class Script {
         // loop until we've read the entire script
         while (count < length.intValue()) {
             // the byte determines if we have an opcode or an element
-            var currentByte = Hex.parse(s.read());
+            var currentByte = Hex.parse(Bytes.read(s, 1));
             count++;
             // if the byte is between 1 and 75 inclusive
             if (currentByte.ge(Int.parse(1)) && currentByte.le(Int.parse(75))) {
-                cmds.add(new Cmd(Bytes.read(s, currentByte.intValue())));
-                count += currentByte.intValue();
+                var n = currentByte.intValue();
+                cmds.add(new Cmd(Bytes.read(s, n)));
+                count += n;
             } else if (currentByte.eq(Int.parse(76))) {
                 // OP_PUSHDATA1
-                int dataLength = Helper.littleEndianToInt(Bytes.read(s, 1)).intValue();
-                cmds.add(new Cmd(Bytes.read(s, dataLength)));
-                count += dataLength + 1;
+                var dataLength = Helper.littleEndianToInt(Bytes.read(s, 1));
+                cmds.add(new Cmd(Bytes.read(s, dataLength.intValue())));
+                count += dataLength.intValue() + 1;
             } else if (currentByte.eq(Int.parse(77))) {
                 // OP_PUSHDATA2
-                int dataLength = Helper.littleEndianToInt(Bytes.read(s, 2)).intValue();
-                cmds.add(new Cmd(Bytes.read(s, dataLength)));
-                count += dataLength + 2;
+                var dataLength = Helper.littleEndianToInt(Bytes.read(s, 2));
+                cmds.add(new Cmd(Bytes.read(s, dataLength.intValue())));
+                count += dataLength.intValue() + 2;
             } else {
                 // it is an opcode
                 cmds.add(OpCodes.findByCode(currentByte).toCmd());
@@ -209,9 +210,9 @@ public class Script {
      * @return a {@code boolean}
      */
     public boolean isP2shScriptPubkey() {
-        return cmds.size() == 3 && cmds.getFirst().getOpCode().equals(OpCodes.OP_169_HASH160)
+        return cmds.size() == 3 && OpCodes.OP_169_HASH160.equals(cmds.get(0).getOpCode())
                 && cmds.get(1).isElement() && cmds.get(1).getElement().length == 20
-                && cmds.get(2).getOpCode().equals(OpCodes.OP_135_EQUAL);
+                && OpCodes.OP_135_EQUAL.equals(cmds.get(2).getOpCode());
     }
 
     /**

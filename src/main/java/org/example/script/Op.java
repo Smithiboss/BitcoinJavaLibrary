@@ -44,58 +44,63 @@ public class Op {
             }
         }
 
-        // This implementation for dispatching opCodes is not the most efficient.
-        // Using a switch statement would be easier and faster, as it runs in constant time.
-        // I used reflection here purely for learning purposes.
-
-        String functionName = opCode.getCodeFunc();
-
-        try {
-            // Find method by function name
-            for (Method method : Op.class.getDeclaredMethods()) {
-                if (method.getName().equals(functionName)) {
-
-                    // Check parameters
-                    Class<?>[] parameterTypes = method.getParameterTypes();
-                    Object[] args = new Object[parameterTypes.length];
-
-                    // Loop through all parameter types to find matching ones
-                    for (int i = 0; i < parameterTypes.length; i++) {
-                        if (parameterTypes[i].isAssignableFrom(Deque.class)) {
-                            // Check parameters for stack or altstack
-                            if (method.getParameters()[i].getName().toLowerCase().contains("alt")) {
-                                args[i] = altStack;
-                            } else {
-                                args[i] = stack;
-                            }
-                        } else if (parameterTypes[i].isAssignableFrom(List.class)) {
-                            args[i] = cmds;
-                        } else if (parameterTypes[i].isAssignableFrom(Int.class)) {
-                            args[i] = z;
-                        } else {
-                            log.warning("Unknown parameter: " + parameterTypes[i]);
-                            return false;
-                        }
-                    }
-
-                    // Call the method
-                    Object result = method.invoke(null, args);
-                    if (result instanceof Boolean) {
-                        return (boolean) result;
-                    } else {
-                        log.warning("Method " + functionName + " does not return boolean!");
-                        return false;
-                    }
-                }
-            }
-
-            log.warning("Method not found: " + functionName);
-            return false;
-
-        } catch (Exception e) {
-            log.severe("Error while executing " + functionName + ": " + e.getMessage());
-            return false;
+        var opResult = false;
+        switch (opCode) {
+            case OP_0_0:
+                opResult = Op.op0(stack);
+                break;
+            case OP_81_1:
+                opResult = Op.op1(stack);
+                break;
+            case OP_82_2:
+                opResult = Op.op2(stack);
+                break;
+            case OP_86_6:
+                opResult = Op.op6(stack);
+                break;
+            case OP_105_VERIFY:
+                opResult = Op.opVerify(stack);
+                break;
+            case OP_110_2DUP:
+                opResult = Op.op2Dup(stack);
+                break;
+            case OP_118_DUP:
+                opResult = Op.opDup(stack);
+                break;
+            case OP_124_SWAP:
+                opResult = Op.opSwap(stack);
+                break;
+            case OP_135_EQUAL:
+                opResult = Op.opEqual(stack);
+                break;
+            case OP_136_EQUALVERIFY:
+                opResult = Op.opEqualVerify(stack);
+                break;
+            case OP_145_NOT:
+                opResult = Op.opNot(stack);
+                break;
+            case OP_147_ADD:
+                opResult = Op.opAdd(stack);
+                break;
+            case OP_167_SHA1:
+                opResult = Op.opSha1(stack);
+                break;
+            case OP_169_HASH160:
+                opResult = Op.opHash160(stack);
+                break;
+            case OP_170_HASH256:
+                opResult = Op.opHash256(stack);
+                break;
+            case OP_172_CHECKSIG:
+                opResult = Op.opCheckSig(stack, z);
+                break;
+            case OP_174_CHECKMULTISIG:
+                opResult = Op.opCheckMultiSig(stack, z);
+                break;
+            default:
+                log.severe(String.format("opcode %s not implemented.", opCode));
         }
+        return opResult;
     }
 
     /**

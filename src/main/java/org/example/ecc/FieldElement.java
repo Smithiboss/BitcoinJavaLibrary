@@ -4,11 +4,11 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-public class FieldElement {
+public class FieldElement implements Operators{
 
     private final static Logger log = Logger.getLogger(FieldElement.class.getSimpleName());
 
-    private final Int num;
+    final Int num;
     private final Int prime;
 
     public FieldElement(Int num, Int prime) {
@@ -23,12 +23,13 @@ public class FieldElement {
         }
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof FieldElement other)) return false;
-        return num.equals(other.num) && prime.equals(other.prime);
+    public boolean eq(Operators otherOperator) {
+        FieldElement other = (FieldElement) otherOperator;
+        if (other == null) {
+            return false;
+        }
+        return this.num.eq(other.num) && this.prime.eq(other.prime);
     }
 
     /** {@inheritDoc} */
@@ -42,41 +43,66 @@ public class FieldElement {
      * @param other {@link FieldElement}
      * @return boolean
      */
-    public boolean ne(FieldElement other) {
-        return !equals(other);
+    @Override
+    public boolean ne(Operators other) {
+        return !this.eq(other);
     }
 
     /**
      * add
-     * @param other {@link FieldElement}
+     * @param otherOperator {@link FieldElement}
      * @return {@link FieldElement}
      */
-    public FieldElement add(FieldElement other) {
-        checkSameField(other);
+    @Override
+    public FieldElement add(Operators otherOperator) {
+        FieldElement other = (FieldElement) otherOperator;
+        if (other == null || this.prime.ne(other.prime)) {
+            String error = "Cannot add two numbers in different Fields";
+            throw new IllegalArgumentException(error);
+        }
         Int result = this.num.add(other.num).mod(prime);
         return new FieldElement(result, prime);
     }
 
     /**
      * sub
-     * @param other {@link FieldElement}
+     * @param otherOperator {@link FieldElement}
      * @return {@link FieldElement}
      */
-    public FieldElement sub(FieldElement other) {
-        checkSameField(other);
+    @Override
+    public FieldElement sub(Operators otherOperator) {
+        FieldElement other = (FieldElement) otherOperator;
+        if (other == null || this.prime.ne(other.prime)) {
+            String error = "Cannot add two numbers in different Fields";
+            throw new IllegalArgumentException(error);
+        }
         Int result = this.num.sub(other.num).mod(prime);
         return new FieldElement(result, prime);
     }
 
     /**
      * mul
-     * @param other {@link FieldElement}
+     * @param otherOperator {@link FieldElement}
      * @return {@link FieldElement}
      */
-    public FieldElement mul(FieldElement other) {
-        checkSameField(other);
+    @Override
+    public FieldElement mul(Operators otherOperator) {
+        FieldElement other = (FieldElement) otherOperator;
+        if (other == null || this.prime.ne(other.prime)) {
+            String error = "Cannot add two numbers in different Fields";
+            throw new IllegalArgumentException(error);
+        }
         Int result = this.num.mul(other.num).mod(prime);
         return new FieldElement(result, prime);
+    }
+
+    @Override
+    public FieldElement mul(int coefficient) {
+        var result = new FieldElement(Int.parse(0), this.prime);
+        for (int i = 0; i < coefficient; i++) {
+            result = result.add(this);
+        }
+        return result;
     }
 
     /**
@@ -92,24 +118,28 @@ public class FieldElement {
 
     /**
      * div
-     * @param other {@link FieldElement}
+     * @param otherOperator {@link FieldElement}
      * @return {@link FieldElement}
      */
-    public FieldElement div(FieldElement other) {
-        checkSameField(other);
+    public FieldElement div(Operators otherOperator) {
+        FieldElement other = (FieldElement) otherOperator;
+        if (other == null || this.prime.ne(other.prime)) {
+            String error = "Cannot add two numbers in different Fields";
+            throw new IllegalArgumentException(error);
+        }
         Int inverse = other.num.modPow(prime.sub(Int.parse(2)), prime);
         Int result = this.num.mul(inverse).mod(prime);
         return new FieldElement(result, prime);
     }
 
-    /**
-     * Check if given {@link FieldElement} is in same field
-     * @param other {@link FieldElement}
-     */
-    private void checkSameField(FieldElement other) {
-        if (!this.prime.equals(other.prime)) {
-            throw new IllegalArgumentException("Field mismatch: " + this.prime + " vs " + other.prime);
-        }
+    @Override
+    public FieldElement mod(Int other) {
+        throw new IllegalStateException();
+    }
+
+    @Override
+    public FieldElement powMod(Int exponent, Int divisor) {
+        throw new IllegalStateException();
     }
 
     /**

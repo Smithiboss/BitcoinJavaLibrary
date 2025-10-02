@@ -1,16 +1,14 @@
 package org.example.ecc;
 
-
-import java.math.BigInteger;
 import java.util.Objects;
 
 public class Point {
-    private final FieldElement x;
-    private final FieldElement y;
-    private final FieldElement a;
-    private final FieldElement b;
+    private final Operators x;
+    private final Operators y;
+    private final Operators a;
+    private final Operators b;
 
-    public Point(FieldElement x, FieldElement y, FieldElement a, FieldElement b) {
+    public Point(Operators x, Operators y, Operators a, Operators b) {
         this.x = x;
         this.y = y;
         this.a = a;
@@ -20,8 +18,8 @@ public class Point {
         if (x == null && y == null) return;
 
         // y^2 = x^3 + ax + b
-        if (!(y.pow(Int.parse(2)).equals(x.pow(Int.parse(3)).add(a.mul(x)).add(b)))) {
-            throw new ArithmeticException("Test");
+        if (!(y.pow(Int.parse(2)).eq(x.pow(Int.parse(3)).add(a.mul(x)).add(b)))) {
+            throw new ArithmeticException("Point is not on the curve.");
         }
     }
 
@@ -32,15 +30,19 @@ public class Point {
         return "Point(" + x + ", " + y + ")_" + a + "_" + b;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Point other)) return false;
-        return Objects.equals(x, other.x) &&
-                Objects.equals(y, other.y) &&
-                Objects.equals(a, other.a) &&
-                Objects.equals(b, other.b);
+    public boolean eq(Point other) {
+        if (other == null) {
+            return false;
+        }
+        if (this.x == null && this.y == null) {
+            return other.x == null && other.y == null && this.a.eq(other.a) && this.b.eq(other.b);
+        } else if (other.x == null && other.y == null) {
+            return false;
+        } else if (this.x == null) {
+            throw new IllegalStateException();
+        } else {
+            return this.x.eq(other.x) && this.y.eq(other.y) && this.a.eq(other.a) && this.b.eq(other.b);
+        }
     }
 
     /** {@inheritDoc} */
@@ -57,34 +59,34 @@ public class Point {
      * @return {@link Point}
      */
     public Point add(Point other) {
-        if (Objects.equals(a.getNum(), other.a.getNum()) && Objects.equals(b.getNum(), other.b.getNum())) {
+        if (this.a.eq(other.a) && this.b.eq(other.b)) {
             // this at infinity
             if (x == null) return other;
             // other at infinity
             if (other.x == null) return this;
 
             // P + (-P) = 0
-            if (x.equals(other.x) && !Objects.equals(y, other.y)) return new Point(null, null, a, b);
+            if (x.eq(other.x) && y.ne(other.y)) return new Point(null, null, a, b);
 
             // x1 != x2
-            if (!x.equals(other.x)) {
-                FieldElement s = other.y.sub(y).div(other.x.sub(x));
-                FieldElement x3 = s.pow(Int.parse(2)).sub(x).sub(other.x);
-                FieldElement y3 = s.mul(x.sub(x3)).sub(y);
+            if (!x.eq(other.x)) {
+                Operators s = other.y.sub(y).div(other.x.sub(x));
+                Operators x3 = s.pow(Int.parse(2)).sub(x).sub(other.x);
+                Operators y3 = s.mul(x.sub(x3)).sub(y);
                 return new Point(x3, y3, a, b);
             };
 
             // P + P = 2P
-            if (this.equals(other)) {
-                FieldElement s = (x.pow(Int.parse(2)).mul(new FieldElement(Int.parse(3), x.getPrime())).add(a))
-                        .div(y.mul(new FieldElement(Int.parse(2), x.getPrime())));
-                FieldElement x3 = s.pow(Int.parse(2)).sub(x.mul(new FieldElement(Int.parse(2), x.getPrime())));
-                FieldElement y3 = s.mul(x.sub(x3)).sub(y);
+            if (this.eq(other)) {
+                Operators s = (x.pow(Int.parse(2)).mul(3).add(a))
+                        .div(y.mul(2));
+                Operators x3 = s.pow(Int.parse(2)).sub(x.mul(2));
+                Operators y3 = s.mul(x.sub(x3)).sub(y);
                 return new Point(x3, y3, a, b);
             }
 
             // Tangent at vertical line -> point at infinity
-            if (this.equals(other) && y.equals(new FieldElement(Int.parse(1), x.getPrime()))) return new Point(null, null, a, b);
+            if (this.eq(other) && y.eq(x.mul(0))) return new Point(null, null, a, b);
         }
         throw new ArithmeticException("Points are not on the same curve.");
     }
@@ -94,7 +96,7 @@ public class Point {
      * @param coefficient {@link Int}
      * @return {@link Point}
      */
-    public Point rMul(Int coefficient) {
+    public Point mul(Int coefficient) {
         Point current = this;
         // Point at infinity
         Point result = new Point(null, null, a, b);
@@ -114,28 +116,36 @@ public class Point {
         return result;
     }
 
+    public static Int getNum(Operators o) {
+        if (o instanceof FieldElement) {
+            return ((FieldElement) o).getNum();
+        } else {
+            return null;
+        }
+    }
+
     /**
      * Get x
      * @return {@link FieldElement}
      */
-    public FieldElement getX() {return x;}
+    public Operators getX() {return x;}
 
     /**
      * Get y
      * @return {@link FieldElement}
      */
-    public FieldElement getY() {return y;}
+    public Operators getY() {return y;}
 
     /**
      * Get a
      * @return {@link FieldElement}
      */
-    public FieldElement getA() {return a;}
+    public Operators getA() {return a;}
 
     /**
      * Get b
      * @return {@link FieldElement}
      */
-    public FieldElement getB() {return b;}
+    public Operators getB() {return b;}
 
 }

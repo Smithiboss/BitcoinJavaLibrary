@@ -5,7 +5,6 @@ import org.example.utils.Bytes;
 import org.example.utils.Hash;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 public class S256Point extends Point {
 
@@ -21,19 +20,31 @@ public class S256Point extends Point {
     }
 
     /**
-     * Multiply a {@link S256Point} with a coefficient
-     * @param coefficient {@link Int}
-     * @return {@link S256Point}
+     * {@inheritDoc}
      */
     @Override
-    public S256Point rMul(Int coefficient) {
+    public S256Point add(Point other) {
+        Point point = super.add(other);
+        if (point.getX() == null) {
+            return null;
+        }
+        var x = new S256Field(getNum(point.getX()));
+        var y = new S256Field(getNum(point.getY()));
+        return new S256Point(x, y);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public S256Point mul(Int coefficient) {
         Int coef = coefficient.mod(N);
-        Point rawPoint = super.rMul(coef);
-        if (rawPoint.getX() == null) {
+        Point rawPoint = super.mul(coef);
+        if (rawPoint.getX() == null && rawPoint.getY() == null) {
             return new S256Point(null, null);
         } else {
-            var x = new S256Field(rawPoint.getX().getNum());
-            var y = new S256Field(rawPoint.getY().getNum());
+            var x = new S256Field(getNum(rawPoint.getX()));
+            var y = new S256Field(getNum(rawPoint.getY()));
             return new S256Point(x, y);
         }
     }
@@ -52,7 +63,8 @@ public class S256Point extends Point {
         // Calculate v = r * 1/s  (r/s)
         Int v = sig.r().mul(sInv).mod(N);
         // Calculate uG + vP = (x, y) and check if x = sig.x
-        return Objects.equals(G.rMul(u).add(this.rMul(v)).getX().getNum(), sig.r());
+        var total = G.mul(u).add(this.mul(v));
+        return ((S256Field) total.getX()).num.eq(sig.r());
     }
 
     /**
@@ -61,11 +73,11 @@ public class S256Point extends Point {
      */
     public byte[] sec(boolean compressed) {
         // Get bytes for x and y coordinates and format to 32 bytes
-        byte[] xBytes = getX().getNum().toBytes(32);
-        byte[] yBytes = getY().getNum().toBytes(32);
+        byte[] xBytes = ((S256Field) getX()).getNum().toBytes(32);
+        byte[] yBytes = ((S256Field) getY()).getNum().toBytes(32);
         if (compressed) {
             // 0x02 if y-coordinate is even, else 0x03
-            byte prefix = getY().getNum().mod(Int.parse(2)).eq(Int.parse(0)) ? (byte) 0x02 : (byte) 0x03;
+            byte prefix = ((S256Field) getY()).getNum().mod(Int.parse(2)).eq(Int.parse(0)) ? (byte) 0x02 : (byte) 0x03;
             return Bytes.concat(new byte[]{prefix}, xBytes);
         } else {
             // 0x04 if uncompressed
@@ -89,11 +101,11 @@ public class S256Point extends Point {
             S256Field evenBeta;
             S256Field oddBeta;
             // Read all bytes except marker bytes
-            S256Field x = new S256Field(Hex.parse((Arrays.copyOfRange(secBin, 1, secBin.length))));
+            var x = new S256Field(Hex.parse((Arrays.copyOfRange(secBin, 1, 33))));
             // Right side of equation: y^2 = x^3 +7
-            S256Field alpha = (S256Field) new S256Field(B).add(x.pow(Int.parse(3)));
+            var alpha = x.pow(Int.parse(3)).add(new S256Field(B));
             // Solve for left side
-            var beta = (S256Field) alpha.sqrt();
+            var beta = alpha.sqrt();
             if (beta.getNum().mod(Int.parse(2)).eq(Int.parse(0))) {
                 evenBeta = beta;
                 oddBeta = new S256Field(S256Field.P.sub(beta.getNum()));

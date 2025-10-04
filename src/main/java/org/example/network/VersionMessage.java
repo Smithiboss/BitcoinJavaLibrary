@@ -36,7 +36,7 @@ public class VersionMessage implements Message {
         this.receiverPort = Objects.requireNonNullElse(receiverPort, Int.parse(8333));
         this.senderServices = Objects.requireNonNullElse(senderServices, Int.parse(0));
         this.senderIP = Objects.requireNonNullElse(senderIP, new byte[]{0x00, 0x00, 0x00, 0x00});
-        this.senderPort = Objects.requireNonNullElse(senderServices, Int.parse(0));
+        this.senderPort = Objects.requireNonNullElse(senderServices, Int.parse(8333));
         this.nonce = Objects.requireNonNullElse(nonce, Bytes.randomBytes(8));
         this.userAgent = Objects.requireNonNullElse(userAgent, "/bitcoinjavalibrary/");
         this.latestBlock = Objects.requireNonNullElse(latestBlock, Int.parse(0));

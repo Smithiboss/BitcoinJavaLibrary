@@ -32,6 +32,14 @@ public class NetworkEnvelope {
         }
     }
 
+    public static NetworkEnvelope parse(String raw, boolean testnet) {
+        return parse(Bytes.hexStringToByteArray(raw), testnet);
+    }
+
+    public static NetworkEnvelope parse(byte[] bytes, boolean testnet) {
+        return parse(new ByteArrayInputStream(bytes), testnet);
+    }
+
     /**
      * Parse
      * @param s a {@link ByteArrayInputStream}
@@ -42,7 +50,7 @@ public class NetworkEnvelope {
         // get magic
         var magic = Bytes.read(s, 4);
         byte[] expectedMagic;
-        // compare magic with magic based on given testnet value
+        // compare magic with magic based on the given testnet value
         if (testnet) {
             expectedMagic = TESTNET_NETWORK_MAGIC;
         } else {

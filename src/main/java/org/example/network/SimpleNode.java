@@ -128,7 +128,22 @@ public class SimpleNode {
         send(version);
 
         var envelope = waitFor(Set.of(VerAckMessage.COMMAND));
+        if (envelope == null) {
+            System.out.println("Handshake failed");
+            return new byte[0];
+        }
 
         return envelope.getPayload();
+    }
+
+    /**
+     * Closes the socket connection to the node.
+     */
+    public void close() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -1,6 +1,7 @@
 package org.example.network;
 
 import org.example.block.Block;
+import org.example.utils.Bytes;
 import org.example.utils.Helper;
 
 import java.io.ByteArrayInputStream;
@@ -14,6 +15,14 @@ public class HeadersMessage {
 
     public HeadersMessage(Block[] blocks) {
         this.blocks = blocks;
+    }
+
+    public static HeadersMessage parse(String raw) {
+        return parse(Bytes.hexStringToByteArray(raw));
+    }
+
+    public static HeadersMessage parse(byte[] bytes) {
+        return parse(new ByteArrayInputStream(bytes));
     }
 
     /**
@@ -35,5 +44,9 @@ public class HeadersMessage {
             }
         }
         return new HeadersMessage(blocks);
+    }
+
+    public Block[] getBlocks() {
+        return blocks;
     }
 }

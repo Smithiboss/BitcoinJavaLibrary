@@ -21,7 +21,7 @@ public class Block {
     private final Int timestamp;
     private final byte[] bits;
     private final byte[] nonce;
-    private final List<byte[]> txHashes;
+    private List<byte[]> txHashes;
 
     public Block(Int version, byte[] prevBlock, byte[] merkleRoot, Int timestamp, byte[] bits, byte[] nonce, List<byte[]> txHashes) {
         this.version = version;
@@ -31,6 +31,14 @@ public class Block {
         this.bits = bits;
         this.nonce = nonce;
         this.txHashes = Objects.requireNonNullElse(txHashes, new ArrayList<>());
+    }
+
+    public static Block parse(String raw) {
+        return parse(Bytes.hexStringToByteArray(raw));
+    }
+
+    public static Block parse(byte[] bytes) {
+        return parse(new ByteArrayInputStream(bytes));
     }
 
     /**
@@ -157,4 +165,31 @@ public class Block {
         return Arrays.equals(Bytes.reverseOrder(root), merkleRoot);
     }
 
+    public Int getVersion() {
+        return version;
+    }
+
+    public byte[] getPrevBlock() {
+        return prevBlock;
+    }
+
+    public byte[] getMerkleRoot() {
+        return merkleRoot;
+    }
+
+    public Int getTimestamp() {
+        return timestamp;
+    }
+
+    public byte[] getBits() {
+        return bits;
+    }
+
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    public void setTxHashes(List<byte[]> txHashes) {
+        this.txHashes = txHashes;
+    }
 }

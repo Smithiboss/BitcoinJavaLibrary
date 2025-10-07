@@ -1,0 +1,52 @@
+package org.smithiboss.network;
+
+import org.smithiboss.block.Block;
+import org.smithiboss.utils.Bytes;
+import org.smithiboss.utils.Helper;
+
+import java.io.ByteArrayInputStream;
+
+public class HeadersMessage {
+
+    private static final String COMMAND = "headers";
+
+    private final Block[] blocks;
+
+
+    public HeadersMessage(Block[] blocks) {
+        this.blocks = blocks;
+    }
+
+    public static HeadersMessage parse(String raw) {
+        return parse(Bytes.hexStringToByteArray(raw));
+    }
+
+    public static HeadersMessage parse(byte[] bytes) {
+        return parse(new ByteArrayInputStream(bytes));
+    }
+
+    /**
+     * Parse
+     * @param s a {@link ByteArrayInputStream} object
+     * @return a {@link HeadersMessage} object
+     */
+    public static HeadersMessage parse(ByteArrayInputStream s) {
+        var numHeaders = Helper.readVarint(s);
+
+        var blocks = new Block[numHeaders.intValue()];
+
+        for (int i = 0; i < numHeaders.intValue(); i++) {
+            blocks[i] = Block.parse(s);
+
+            var numTxs = Helper.readVarint(s);
+            if (numTxs.intValue() != 0) {
+                throw new IllegalStateException("Number of transactions is not 0");
+            }
+        }
+        return new HeadersMessage(blocks);
+    }
+
+    public Block[] getBlocks() {
+        return blocks;
+    }
+}

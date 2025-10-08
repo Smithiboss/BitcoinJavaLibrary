@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-public class FieldElement implements Operators{
+public class FieldElement implements Operator {
 
     private final static Logger log = Logger.getLogger(FieldElement.class.getSimpleName());
 
@@ -24,7 +24,7 @@ public class FieldElement implements Operators{
     }
 
     @Override
-    public boolean eq(Operators otherOperator) {
+    public boolean eq(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
         if (other == null) {
             return false;
@@ -44,7 +44,7 @@ public class FieldElement implements Operators{
      * @return boolean
      */
     @Override
-    public boolean ne(Operators other) {
+    public boolean ne(Operator other) {
         return !this.eq(other);
     }
 
@@ -54,7 +54,7 @@ public class FieldElement implements Operators{
      * @return {@link FieldElement}
      */
     @Override
-    public FieldElement add(Operators otherOperator) {
+    public FieldElement add(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
         if (other == null || this.prime.ne(other.prime)) {
             String error = "Cannot add two numbers in different Fields";
@@ -70,7 +70,7 @@ public class FieldElement implements Operators{
      * @return {@link FieldElement}
      */
     @Override
-    public FieldElement sub(Operators otherOperator) {
+    public FieldElement sub(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
         if (other == null || this.prime.ne(other.prime)) {
             String error = "Cannot add two numbers in different Fields";
@@ -86,7 +86,7 @@ public class FieldElement implements Operators{
      * @return {@link FieldElement}
      */
     @Override
-    public FieldElement mul(Operators otherOperator) {
+    public FieldElement mul(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
         if (other == null || this.prime.ne(other.prime)) {
             String error = "Cannot add two numbers in different Fields";
@@ -121,7 +121,7 @@ public class FieldElement implements Operators{
      * @param otherOperator {@link FieldElement}
      * @return {@link FieldElement}
      */
-    public FieldElement div(Operators otherOperator) {
+    public FieldElement div(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
         if (other == null || this.prime.ne(other.prime)) {
             String error = "Cannot add two numbers in different Fields";

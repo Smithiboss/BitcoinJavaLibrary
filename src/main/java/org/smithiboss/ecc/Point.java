@@ -3,12 +3,12 @@ package org.smithiboss.ecc;
 import java.util.Objects;
 
 public class Point {
-    private final Operators x;
-    private final Operators y;
-    private final Operators a;
-    private final Operators b;
+    private final Operator x;
+    private final Operator y;
+    private final Operator a;
+    private final Operator b;
 
-    public Point(Operators x, Operators y, Operators a, Operators b) {
+    public Point(Operator x, Operator y, Operator a, Operator b) {
         this.x = x;
         this.y = y;
         this.a = a;
@@ -70,18 +70,18 @@ public class Point {
 
             // x1 != x2
             if (!x.eq(other.x)) {
-                Operators s = other.y.sub(y).div(other.x.sub(x));
-                Operators x3 = s.pow(Int.parse(2)).sub(x).sub(other.x);
-                Operators y3 = s.mul(x.sub(x3)).sub(y);
+                Operator s = other.y.sub(y).div(other.x.sub(x));
+                Operator x3 = s.pow(Int.parse(2)).sub(x).sub(other.x);
+                Operator y3 = s.mul(x.sub(x3)).sub(y);
                 return new Point(x3, y3, a, b);
             };
 
             // P + P = 2P
             if (this.eq(other)) {
-                Operators s = (x.pow(Int.parse(2)).mul(3).add(a))
+                Operator s = (x.pow(Int.parse(2)).mul(3).add(a))
                         .div(y.mul(2));
-                Operators x3 = s.pow(Int.parse(2)).sub(x.mul(2));
-                Operators y3 = s.mul(x.sub(x3)).sub(y);
+                Operator x3 = s.pow(Int.parse(2)).sub(x.mul(2));
+                Operator y3 = s.mul(x.sub(x3)).sub(y);
                 return new Point(x3, y3, a, b);
             }
 
@@ -116,7 +116,7 @@ public class Point {
         return result;
     }
 
-    public static Int getNum(Operators o) {
+    public static Int getNum(Operator o) {
         if (o instanceof FieldElement) {
             return ((FieldElement) o).getNum();
         } else {
@@ -128,24 +128,24 @@ public class Point {
      * Get x
      * @return {@link FieldElement}
      */
-    public Operators getX() {return x;}
+    public Operator getX() {return x;}
 
     /**
      * Get y
      * @return {@link FieldElement}
      */
-    public Operators getY() {return y;}
+    public Operator getY() {return y;}
 
     /**
      * Get a
      * @return {@link FieldElement}
      */
-    public Operators getA() {return a;}
+    public Operator getA() {return a;}
 
     /**
      * Get b
      * @return {@link FieldElement}
      */
-    public Operators getB() {return b;}
+    public Operator getB() {return b;}
 
 }

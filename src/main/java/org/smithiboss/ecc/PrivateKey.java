@@ -19,7 +19,7 @@ public class PrivateKey {
     }
 
     /**
-     * Signs a given z
+     * Signs a given message hash z with the private key
      * @param z a {@link Int} object
      * @return a {@link Signature} object
      */
@@ -41,8 +41,7 @@ public class PrivateKey {
 
     /**
      * Calculates a unique, deterministic k
-     * <p>
-     * Deterministic k generation standard specified in RFC6979     * <a href="https://tools.ietf.org/html/rfc6979"></a>
+     * Deterministic k generation standard specified in RFC6979 * <a href="https://tools.ietf.org/html/rfc6979"></a>
      * @param z The message
      * @return a {@link Int} object
      * @throws NoSuchAlgorithmException Algorithm not found

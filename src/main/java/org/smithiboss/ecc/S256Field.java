@@ -12,7 +12,7 @@ public class S256Field extends FieldElement {
     }
 
     @Override
-    public S256Field add(Operators otherOperator) {
+    public S256Field add(Operator otherOperator) {
         return new S256Field(super.add(otherOperator).getNum());
     }
 

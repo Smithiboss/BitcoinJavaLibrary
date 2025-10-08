@@ -15,6 +15,7 @@ public class TxIn {
     private final Int prevIndex;         // 4 bytes
     private Script scriptSig;            // variable
     private final Int sequence;          // 4 bytes
+    private Script witness;
 
     public TxIn(Int prevTx, Int prevIndex, Script scriptSig, Int sequence) {
         this.prevTx = prevTx;
@@ -105,7 +106,15 @@ public class TxIn {
         return sequence;
     }
 
+    public Script getWitness() {
+        return witness;
+    }
+
     public void setScriptSig(Script scriptSig) {
         this.scriptSig = scriptSig;
+    }
+
+    public void setWitness(Script witness) {
+        this.witness = witness;
     }
 }

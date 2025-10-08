@@ -1,5 +1,6 @@
 package org.smithiboss.tx;
 
+import org.smithiboss.script.OpCodes;
 import org.smithiboss.utils.Bytes;
 import org.smithiboss.utils.Hash;
 import org.smithiboss.utils.Helper;
@@ -13,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Tx {
 
@@ -20,14 +22,16 @@ public class Tx {
     private final List<TxIn> txIns;
     private final List<TxOut> txOuts;
     private Int lockTime;
-    private boolean testnet;
+    private Boolean testnet;
+    private Boolean segwit;
 
-    public Tx(Int version, List<TxIn> txIns, List<TxOut> txOuts, Int lockTime, boolean testnet) {
+    public Tx(Int version, List<TxIn> txIns, List<TxOut> txOuts, Int lockTime, Boolean testnet, Boolean segwit) {
         this.version = version;
         this.txIns = txIns;
         this.txOuts = txOuts;
         this.lockTime = lockTime;
-        this.testnet = testnet;
+        this.testnet = Objects.requireNonNullElse(testnet, false);
+        this.segwit = Objects.requireNonNullElse(segwit, false);
     }
 
     /** {@inheritDoc} */
@@ -53,12 +57,30 @@ public class Tx {
     }
 
     /**
+     * Takes a raw byte stream and parses the transaction at the start
+     * @param s a {@link ByteArrayInputStream}
+     * @param testnet a {@code boolean}
+     * @return a {@link Tx} object
+     */
+    public static Tx parse(ByteArrayInputStream s, Boolean testnet) {
+        Bytes.read(s, 4);
+        var marker = Hex.parse(Bytes.read(s, 1));
+        s.reset();
+        if (marker.eq(Hex.parse("00"))) {
+            return parseSegwit(s, testnet);
+        } else {
+            return parseLegacy(s, testnet);
+        }
+
+    }
+
+    /**
      * Takes a raw string and parses the transaction at the start
      * @param raw a {@link String} object
      * @param testnet a {@code boolean}
      * @return a {@link Tx} object
      */
-    public static Tx parseLegacy(String raw, boolean testnet) {
+    public static Tx parseLegacy(String raw, Boolean testnet) {
         return parseLegacy(Bytes.hexStringToByteArray(raw), testnet);
     }
 
@@ -68,7 +90,7 @@ public class Tx {
      * @param testnet a {@code boolean}
      * @return a {@link Tx} object
      */
-    public static Tx parseLegacy(byte[] bytes, boolean testnet) {
+    public static Tx parseLegacy(byte[] bytes, Boolean testnet) {
         return parseLegacy(new ByteArrayInputStream(bytes), testnet);
     }
 
@@ -78,7 +100,7 @@ public class Tx {
      * @param testnet a {@code boolean}
      * @return a {@link Tx} object
      */
-    public static Tx parseLegacy(ByteArrayInputStream s, boolean testnet) {
+    public static Tx parseLegacy(ByteArrayInputStream s, Boolean testnet) {
         // s.read(n) will return n bytes
         // version is an integer in 4 bytes, little-endian
         var version = Helper.littleEndianToInt(Bytes.read(s, 4));
@@ -100,7 +122,46 @@ public class Tx {
         }
         // lockTime is an integer in 4 bytes, little-endian
         var lockTime = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
-        return new Tx(version, inputs, outputs, lockTime, testnet);
+        return new Tx(version, inputs, outputs, lockTime, testnet, false);
+    }
+
+    /**
+     * Parses a segwit transaction.
+     * @param s a {@link ByteArrayInputStream}
+     * @param testnet a {@code boolean}
+     * @return a {@link Tx} object
+     */
+    public static Tx parseSegwit(ByteArrayInputStream s, Boolean testnet) {
+        var version = Helper.littleEndianToInt(Bytes.read(s, 4));
+        var markerFlag = Hex.parse(Bytes.read(s, 2));
+        if (markerFlag.ne(Hex.parse("0001"))) {
+            throw new IllegalStateException("Not a segwit transaction");
+        }
+        var inputNum = Helper.readVarint(s).intValue();
+        List<TxIn> inputs = new ArrayList<>();
+        for (int i = 0; i < inputNum; i++) {
+            inputs.add(TxIn.parse(s));
+        }
+        var outputNum = Helper.readVarint(s).intValue();
+        List<TxOut> outputs = new ArrayList<>();
+        for (int i = 0; i < outputNum; i++) {
+            outputs.add(TxOut.parse(s));
+        }
+        for (TxIn txIn : inputs) {
+            var itemNum = Helper.readVarint(s).intValue();
+            List<Cmd> items = new ArrayList<>();
+            for (int i = 0; i < itemNum; i++) {
+                var itemLen = Helper.readVarint(s).intValue();
+                if (itemLen == 0) {
+                    items.add(OpCodes.OP_0_0.toCmd());
+                } else {
+                    items.add(new Cmd(Bytes.read(s, itemLen)));
+                }
+            }
+            txIn.setWitness(new Script(items));
+        }
+        var lockTime = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
+        return new Tx(version, inputs, outputs, lockTime, testnet, true);
     }
 
     /**

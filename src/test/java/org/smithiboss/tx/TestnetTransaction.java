@@ -43,7 +43,7 @@ public class TestnetTransaction {
         var targetH160 = Base58.decodeAddress("myWZQE4VcprNzAd455kDP3EKPJnxHR5UFj");
         var targetScript = Script.p2pkhScript(targetH160);
         var targetOutput = new TxOut(targetAmount, targetScript);
-        var txObject = new Tx(Int.parse(1), List.of(txIn), List.of(changeOutput, targetOutput), Int.parse(0), true);
+        var txObject = new Tx(Int.parse(1), List.of(txIn), List.of(changeOutput, targetOutput), Int.parse(0), true, null);
         signTransaction(txObject);
     }
 

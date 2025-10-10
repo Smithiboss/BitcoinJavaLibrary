@@ -68,11 +68,11 @@ public class TxFetcher {
                     log.info("yes");
                     rawBytes = Bytes.concat(Arrays.copyOfRange(rawBytes, 0, 4), Arrays.copyOfRange(rawBytes, 6, rawBytes.length));
 
-                    tx = Tx.parseLegacy(new ByteArrayInputStream(rawBytes), testnet);
+                    tx = Tx.parse(new ByteArrayInputStream(rawBytes), testnet);
                     var locktime = Hex.parse(Bytes.reverseOrder(Arrays.copyOfRange(rawBytes, rawBytes.length - 4, rawBytes.length)));
                     tx.setLockTime(locktime);
                 } else {
-                    tx = Tx.parseLegacy(new ByteArrayInputStream(rawBytes), testnet);
+                    tx = Tx.parse(new ByteArrayInputStream(rawBytes), testnet);
                 }
 
                 log.info(tx.toString());
@@ -90,7 +90,7 @@ public class TxFetcher {
             rawTx = cache.get(txId64);
         }
         var txBytes = Bytes.hexStringToByteArray(rawTx);
-        Tx tx = Tx.parseLegacy(txBytes, testnet);
+        Tx tx = Tx.parse(txBytes, testnet);
         return tx;
     }
 

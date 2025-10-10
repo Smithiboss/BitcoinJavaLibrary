@@ -24,6 +24,9 @@ public class Tx {
     private Int lockTime;
     private Boolean testnet;
     private Boolean segwit;
+    private byte[] _hashPrevouts = null;
+    private byte[] _hashSequence = null;
+    private byte[] _hashOutputs = null;
 
     public Tx(Int version, List<TxIn> txIns, List<TxOut> txOuts, Int lockTime, Boolean testnet, Boolean segwit) {
         this.version = version;
@@ -57,10 +60,33 @@ public class Tx {
     }
 
     /**
-     * Takes a raw byte stream and parses the transaction at the start
-     * @param s a {@link ByteArrayInputStream}
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
+     * Parses a transaction from a byte stream and determines if it's a legacy or segwit transaction.
+     *
+     * @param raw a {@link String} representing the hex string of the transaction
+     * @param testnet a {@code Boolean} indicating whether the transaction is for the testnet
+     * @return a {@code Tx} object representing the parsed transaction
+     */
+    public static Tx parse(String raw, Boolean testnet) {
+        return parse(Bytes.hexStringToByteArray(raw), testnet);
+    }
+
+    /**
+     * Parses a transaction from a byte stream and determines if it's a legacy or segwit transaction.
+     *
+     * @param bytes a {@code byte} array representing the input bytes of the transaction
+     * @param testnet a {@code Boolean} indicating whether the transaction is for the testnet
+     * @return a {@code Tx} object representing the parsed transaction
+     */
+    public static Tx parse(byte[] bytes, Boolean testnet) {
+        return parse(new ByteArrayInputStream(bytes), testnet);
+    }
+
+    /**
+     * Parses a transaction from a byte stream and determines if it's a legacy or segwit transaction.
+     *
+     * @param s a {@code ByteArrayInputStream} representing the input byte stream of the transaction
+     * @param testnet a {@code Boolean} indicating whether the transaction is for the testnet
+     * @return a {@code Tx} object representing the parsed transaction
      */
     public static Tx parse(ByteArrayInputStream s, Boolean testnet) {
         Bytes.read(s, 4);
@@ -71,36 +97,16 @@ public class Tx {
         } else {
             return parseLegacy(s, testnet);
         }
-
     }
 
     /**
-     * Takes a raw string and parses the transaction at the start
-     * @param raw a {@link String} object
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
+     * Parses a legacy Bitcoin transaction from the given input stream.
+     *
+     * @param s a {@code ByteArrayInputStream} representing the input byte stream of the transaction
+     * @param testnet a {@code Boolean} indicating whether the transaction belongs to the testnet
+     * @return a {@code Tx} object representing the parsed legacy transaction
      */
-    public static Tx parseLegacy(String raw, Boolean testnet) {
-        return parseLegacy(Bytes.hexStringToByteArray(raw), testnet);
-    }
-
-    /**
-     * Takes a byte array and parses the transaction at the start
-     * @param bytes a {@code byte} array
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
-     */
-    public static Tx parseLegacy(byte[] bytes, Boolean testnet) {
-        return parseLegacy(new ByteArrayInputStream(bytes), testnet);
-    }
-
-    /**
-     * Takes a byte stream and parses the transaction at the start
-     * @param s a {@link ByteArrayInputStream}
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
-     */
-    public static Tx parseLegacy(ByteArrayInputStream s, Boolean testnet) {
+    private static Tx parseLegacy(ByteArrayInputStream s, Boolean testnet) {
         // s.read(n) will return n bytes
         // version is an integer in 4 bytes, little-endian
         var version = Helper.littleEndianToInt(Bytes.read(s, 4));
@@ -126,12 +132,14 @@ public class Tx {
     }
 
     /**
-     * Parses a segwit transaction.
-     * @param s a {@link ByteArrayInputStream}
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
+     * Parses a SegWit Bitcoin transaction from the given input stream.
+     *
+     * @param s a {@code ByteArrayInputStream} representing the input byte stream of the transaction
+     * @param testnet a {@code Boolean} indicating whether the transaction belongs to the testnet
+     * @return a {@code Tx} object representing the parsed SegWit transaction
+     * @throws IllegalStateException if the provided transaction is not a valid SegWit transaction
      */
-    public static Tx parseSegwit(ByteArrayInputStream s, Boolean testnet) {
+    private static Tx parseSegwit(ByteArrayInputStream s, Boolean testnet) {
         var version = Helper.littleEndianToInt(Bytes.read(s, 4));
         var markerFlag = Hex.parse(Bytes.read(s, 2));
         if (markerFlag.ne(Hex.parse("0001"))) {
@@ -168,6 +176,18 @@ public class Tx {
      * Returns the byte serialization of the transaction
      * @return a {@code byte} array
      */
+    public byte[] serialize() {
+        if (segwit) {
+            return serializeSegwit();
+        } else {
+            return serializeLegacy();
+        }
+    }
+
+    /**
+     * Returns the byte serialization of the transaction
+     * @return a {@code byte} array
+     */
     public byte[] serializeLegacy() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         // serializeLegacy version
@@ -189,6 +209,37 @@ public class Tx {
         // serializeLegacy locktime
         result.writeBytes(lockTime.toBytesLittleEndian(4));
 
+        return result.toByteArray();
+    }
+
+    /**
+     * Returns the byte serialization of the transaction in segwit format.
+     * @return a {@code byte} array
+     */
+    public byte[] serializeSegwit() {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        result.writeBytes(version.toBytesLittleEndian(4));
+        result.writeBytes(new byte[]{0x00, 0x01});
+        result.writeBytes(Helper.encodeVarInt(Int.parse(txIns.size())));
+        for (TxIn txIn : txIns) {
+            result.writeBytes(txIn.serialize());
+        }
+        result.writeBytes(Helper.encodeVarInt(Int.parse(txOuts.size())));
+        for (TxOut txOut : txOuts) {
+            result.writeBytes(txOut.serialize());
+        }
+        for (TxIn txIn : txIns) {
+            result.writeBytes(Int.parse(txIn.getWitness().getCmds().size()).toBytesLittleEndian(1));
+            for (Cmd item : txIn.getWitness().getCmds()) {
+                if (item.isOpCode()) {
+                    result.writeBytes(item.getOpCode().getCode().toBytesLittleEndian(1));
+                } else {
+                    result.writeBytes(Helper.encodeVarInt(Int.parse(item.getElement().length)));
+                    result.writeBytes(item.getElement());
+                }
+            }
+        }
+        result.writeBytes(lockTime.toBytesLittleEndian(4));
         return result.toByteArray();
     }
 
@@ -220,7 +271,7 @@ public class Tx {
                 // remove scriptSig
                 scriptSig = null;
             }
-            // add the serialization of the input with correct scriptSig
+            // add the serialization of the input with the correct scriptSig
             stream.writeBytes(new TxIn(txIn.getPrevTx(), txIn.getPrevIndex(), scriptSig, txIn.getSequence()).serialize());
         }
         // encode the number of outputs as a varint
@@ -238,6 +289,85 @@ public class Tx {
     }
 
     /**
+     * Computes and returns the hash of all the previous transaction outputs (Prevouts)
+     * used as inputs in the current transaction. The hash is calculated using the
+     * double SHA-256 (hash256) function on the concatenated data of previous transaction hashes
+     * and their respective indices in little-endian format.
+     * <p>
+     * If the hash is already computed (cached), it returns the cached value directly.
+     * Otherwise, it processes all the transaction inputs to compute the hash,
+     * caches it, and then returns the result.
+     *
+     * @return a {@code byte} array containing the double SHA-256 hash of all previous inputs.
+     */
+    private byte[] hashPrevouts() {
+        if (_hashPrevouts == null) {
+            var allPrevouts = new byte[0];
+            var allSequence = new byte[0];
+            for (TxIn txIn : txIns) {
+                allPrevouts = Bytes.concat(allPrevouts, Bytes.reverseOrder(txIn.getPrevTx().toBytes()), txIn.getPrevIndex().toBytesLittleEndian(4));
+                allSequence = Bytes.concat(allSequence, txIn.getSequence().toBytesLittleEndian(4));
+            }
+            _hashPrevouts = Hash.hash256(allPrevouts);
+            _hashSequence = Hash.hash256(allSequence);
+        }
+        return _hashPrevouts;
+    }
+
+    private byte[] hashSequence() {
+        if (_hashSequence == null) {
+            hashPrevouts();
+        }
+        return _hashSequence;
+    }
+
+    private byte[] hashOutputs() {
+        if (_hashOutputs == null) {
+            var allOutputs = new byte[0];
+            for (TxOut txOut : txOuts) {
+                allOutputs = Bytes.concat(allOutputs, txOut.serialize());
+            }
+            _hashOutputs = Hash.hash256(allOutputs);
+        }
+        return _hashOutputs;
+    }
+
+    /**
+     * Computes the SigHash (signature hash) for a given input index using the BIP-143 hashing scheme.
+     * This method handles scenarios involving SegWit, redeem scripts, or witness scripts.
+     *
+     * @param inputIndex the index of the input for which the SigHash is being calculated
+     * @param redeemScript the redeem script used in the transaction, can be null if not applicable
+     * @param witnessScript the witness script used in the transaction, can be null if not applicable
+     * @return a {@link Int} object representing the computed SigHash as an integer
+     */
+    public Int sigHashBip143(int inputIndex, Script redeemScript, Script witnessScript) {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        var txIn = txIns.get(inputIndex);
+
+        result.writeBytes(version.toBytesLittleEndian(4));
+        result.writeBytes(hashPrevouts());
+        result.writeBytes(hashSequence());
+        result.writeBytes(txIn.getPrevTx().toBytesLittleEndian());
+        result.writeBytes(txIn.getPrevIndex().toBytesLittleEndian(4));
+        byte[] scriptCode;
+        if (witnessScript != null) {
+            scriptCode = witnessScript.serialize();
+        } else if (redeemScript != null) {
+            scriptCode = Script.p2pkhScript(redeemScript.getCmds().getLast().getElement()).serialize();
+        } else {
+            scriptCode = Script.p2pkhScript(txIn.scriptPubkey(testnet).getCmds().get(1).getElement()).serialize();
+        }
+        result.writeBytes(scriptCode);
+        result.writeBytes(txIn.value(testnet).toBytesLittleEndian(8));
+        result.writeBytes(txIn.getSequence().toBytesLittleEndian(4));
+        result.writeBytes(hashOutputs());
+        result.writeBytes(lockTime.toBytesLittleEndian(4));
+        result.writeBytes(Hash.SIGHASH_ALL.toBytesLittleEndian(4));
+        return Hex.parse(Hash.hash256(result.toByteArray()));
+    }
+
+    /**
      * Validates the signature of the input at inputIndex
      * @param inputIndex a {@code int}
      * @return a {@code boolean}
@@ -247,21 +377,47 @@ public class Tx {
         // get the scriptPubkey of previous output
         var scriptPubKey = txIn.scriptPubkey(this.testnet);
         Script redeemScript = null;
+        Int z = null;
+        Script witness = null;
         // check if ScriptPubKey is p2sh
         if (scriptPubKey.isP2shScriptPubkey()) {
             // get redeem script
-            var cmd = txIn.getScriptSig().getCmds().get(txIn.getScriptSig().getCmds().size() - 1);
+            var cmd = txIn.getScriptSig().getCmds().getLast();
             // add varint
             var rawRedeem = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
             // parse redeem script
             redeemScript = Script.parse(new ByteArrayInputStream(rawRedeem));
+
+            if (redeemScript.isP2wpkhScriptPubkey()) {
+                z = sigHashBip143(inputIndex, redeemScript, null);
+                witness = txIn.getWitness();
+            } else if (redeemScript.isP2wshScriptPubkey()) {
+                cmd = txIn.getWitness().getCmds().getLast();
+                var rawWitness = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+                var witnessScript = Script.parse(new ByteArrayInputStream(rawWitness));
+                z = sigHashBip143(inputIndex, null, witnessScript);
+                witness = txIn.getWitness();
+            } else {
+                z = sigHash(inputIndex, redeemScript);
+            }
+        } else {
+            if (scriptPubKey.isP2wpkhScriptPubkey()) {
+                z = sigHashBip143(inputIndex, null, null);
+                witness = txIn.getWitness();
+            } else if (scriptPubKey.isP2wshScriptPubkey()) {
+                var cmd = txIn.getWitness().getCmds().getLast();
+                var rawWitness = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+                var witnessScript = Script.parse(new ByteArrayInputStream(rawWitness));
+                z = sigHashBip143(inputIndex, null, witnessScript);
+                witness = txIn.getWitness();
+            } else {
+                z = sigHash(inputIndex, null);
+            }
         }
-        // calculate z
-        var z = sigHash(inputIndex, redeemScript);
         // combine Script Signature and Script PubKey
         var combined = txIn.getScriptSig().add(scriptPubKey);
         // evaluate the combined script
-        return combined.evaluate(z);
+        return combined.evaluate(z, witness);
     }
 
     /**

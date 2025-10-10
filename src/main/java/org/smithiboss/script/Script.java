@@ -1,6 +1,7 @@
 package org.smithiboss.script;
 
 import org.smithiboss.utils.Bytes;
+import org.smithiboss.utils.Hash;
 import org.smithiboss.utils.Helper;
 import org.smithiboss.ecc.Hex;
 import org.smithiboss.ecc.Int;
@@ -52,12 +53,37 @@ public class Script {
     }
 
     /**
+     * Takes a hash160 and returns the p2sh ScriptPubKey
+     * @param h160 a {@code byte} array
+     * @return a {@link Script} object
+     */
+    public static Script p2shScript(byte[] h160) {
+        List<Cmd> cmds = new ArrayList<>();
+        cmds.add(OpCodes.OP_169_HASH160.toCmd());
+        cmds.add(new Cmd(h160));
+        cmds.add(OpCodes.OP_135_EQUAL.toCmd());
+        return new Script(cmds);
+    }
+
+    /**
+     * Takes a hash160 and returns the p2wpkh ScriptPubKey
+     * @param h160 a {@code byte} array
+     * @return a {@link Script} object
+     */
+    public static Script p2wpkhScript(byte[] h160) {
+        List<Cmd> cmds = new ArrayList<>();
+        cmds.add(OpCodes.OP_0_0.toCmd());
+        cmds.add(new Cmd(h160));
+        return new Script(cmds);
+    }
+
+    /**
      * Parse
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link Script} object
      */
     public static Script parse(ByteArrayInputStream s) {
-        // get length of entire script
+        // get the length of the entire script
         Int length = Helper.readVarint(s);
         var cmds = new ArrayList<Cmd>();
         // keep track of the current position inside the stream
@@ -146,7 +172,7 @@ public class Script {
      * @param z The Signature hash. A {@link Int} object
      * @return a {@code boolean}
      */
-    public boolean evaluate(Int z) {
+    public boolean evaluate(Int z, Script witness) {
         var cmdsCopy = new ArrayList<>(this.cmds);
         var stack = new ArrayDeque<byte[]>();
         var altStack = new ArrayDeque<byte[]>();
@@ -188,6 +214,24 @@ public class Script {
                     var stream = new ByteArrayInputStream(redeemScript);
                     // extend the command set with the parsed commands from the redeem script
                     cmdsCopy.addAll(Script.parse(stream).cmds);
+                } else if (new Script(cmdsCopy).isP2wpkhScriptPubkey()) {
+                    var h160 = stack.pop();
+                    stack.pop();
+                    cmdsCopy.addAll(witness.getCmds());
+                    cmdsCopy.addAll(Script.p2pkhScript(h160).getCmds());
+                } else if (new Script(cmdsCopy).isP2wshScriptPubkey()) {
+                    var s256 = stack.pop();
+                    stack.pop();
+                    var witnessScript = witness.getCmds().removeLast();
+                    cmdsCopy.addAll(witness.getCmds());
+                    if (!Arrays.equals(s256, Hash.sha256(witnessScript.getElement()))) {
+                        log.severe("Script evaluation failed! Witness script hash mismatch!");
+                        return false;
+                    }
+                    var stream = new ByteArrayInputStream(Bytes.concat(Helper.encodeVarInt(Int.parse(witnessScript.getElement().length)),
+                            witnessScript.getElement()));
+                    var witnessScriptCmds = Script.parse(stream).cmds;
+                    cmdsCopy.addAll(witnessScriptCmds);
                 }
             }
         }
@@ -206,13 +250,50 @@ public class Script {
     }
 
     /**
-     * Returns whether this is a p2sh script pubkey
-     * @return a {@code boolean}
+     * Determines if the current script is a Pay-to-Script-Hash (P2SH) ScriptPubKey.
+     * <p>
+     * A P2SH ScriptPubKey has the following structure:
+     * - It consists of exactly three commands.
+     * - The first command is OP_HASH160.
+     * - The second command contains a 20-byte hash, often known as a hash160.
+     * - The third command is OP_EQUAL.
+     *
+     * @return true if the script is a P2SH ScriptPubKey, false otherwise
      */
     public boolean isP2shScriptPubkey() {
         return cmds.size() == 3 && OpCodes.OP_169_HASH160.equals(cmds.get(0).getOpCode())
                 && cmds.get(1).isElement() && cmds.get(1).getElement().length == 20
                 && OpCodes.OP_135_EQUAL.equals(cmds.get(2).getOpCode());
+    }
+
+    /**
+     * Determines if the current script is a Pay-to-Witness-Public-Key-Hash (P2WPKH) ScriptPubKey.
+     * <p>
+     * A P2WPKH ScriptPubKey has the following structure:
+     * - It consists of exactly two commands.
+     * - The first command is OP_0.
+     * - The second command contains a 20-byte value, which represents the HASH160 of a public key.
+     *
+     * @return true if the script is a P2WPKH ScriptPubKey, false otherwise
+     */
+    public boolean isP2wpkhScriptPubkey() {
+        return cmds.size() == 2 && OpCodes.OP_0_0.equals(cmds.getFirst().getOpCode())
+                && cmds.get(1).isElement() && cmds.get(1).getElement().length == 20;
+    }
+
+    /**
+     * Determines if the current script is a Pay-to-Witness-Script-Hash (P2WSH) ScriptPubKey.
+     * <p>
+     * A P2WSH ScriptPubKey has the following structure:
+     * - It consists of exactly two commands.
+     * - The first command is OP_0.
+     * - The second command contains a 32-byte hash (representing the SHA256 hash of the redeem script).
+     *
+     * @return true if the script is a P2WSH ScriptPubKey, false otherwise
+     */
+    public boolean isP2wshScriptPubkey() {
+        return cmds.size() == 2 && OpCodes.OP_0_0.equals(cmds.getFirst().getOpCode())
+                && cmds.get(1).isElement() && cmds.get(1).getElement().length == 32;
     }
 
     /**

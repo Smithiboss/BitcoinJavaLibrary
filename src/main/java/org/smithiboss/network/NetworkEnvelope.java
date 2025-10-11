@@ -56,7 +56,7 @@ public class NetworkEnvelope {
         } else {
             expectedMagic = NETWORK_MAGIC;
         }
-        if (Arrays.compareUnsigned(expectedMagic, magic) != 0) {
+        if (Arrays.compare(expectedMagic, magic) != 0) {
             throw new IllegalArgumentException("Invalid magic number");
         }
         // get command

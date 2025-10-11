@@ -1,6 +1,5 @@
 package org.smithiboss.network;
 
-import org.smithiboss.script.Op;
 import org.smithiboss.utils.Bytes;
 
 import java.io.ByteArrayInputStream;
@@ -8,13 +7,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
 public class SimpleNode {
 
-    private static final Logger log = Logger.getLogger(Op.class.getSimpleName());
+    private static final Logger log = Logger.getLogger(SimpleNode.class.getSimpleName());
 
     private final String host;
     private final Integer port;
@@ -36,7 +36,12 @@ public class SimpleNode {
         try {
             this.socket = SocketChannel.open();
             socket.configureBlocking(true);
-            socket.connect(new InetSocketAddress(host, port));
+            socket.connect(new InetSocketAddress(this.host, this.port));
+            if (socket.isConnected()) {
+                System.out.println("✓ Successfully connected to " + host + ":" + port);
+            } else {
+                System.out.println("✗ Connection failed");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,14 +52,16 @@ public class SimpleNode {
      * @param message an object implementing {@link Message}
      */
     public void send(Message message) {
-        var envelope = new NetworkEnvelope(message.getCommand(), message.serialize(), testnet);
+        var rawMessage = Bytes.hexStringToByteArray("F9BEB4D976657273696F6E0000000000550000002C2F86F37E1101000000000000000000C515CF6100000000000000000000000000000000000000000000FFFF2E13894A208D000000000000000000000000000000000000FFFF7F000001208D00000000000000000000000000");
+        var envelope = new NetworkEnvelope(message.getCommand(), rawMessage, testnet);
+        System.out.println(Bytes.byteArrayToHexString(envelope.serialize()));
 
         if (logging) {
             log.fine("Sending %s".formatted(envelope));
         }
 
         try {
-            socket.write(ByteBuffer.wrap(envelope.serialize()));
+            socket.write(ByteBuffer.wrap(rawMessage));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -69,25 +76,53 @@ public class SimpleNode {
         int currentLength = 0;
         int expectedLength = -1;
 
+        System.out.println("Waiting for data...");
+
         do {
             try {
-                currentLength += socket.read(buffer);
+                int bytesRead = socket.read(buffer);
+                if (bytesRead > 0) {
+                    currentLength += bytesRead;
+                    System.out.println("Read " + bytesRead + " bytes, total: " + currentLength);
+                } else if (bytesRead == -1) {
+                    System.out.println("Connection closed by peer");
+                    return null;
+                }
             } catch (IOException e) {
+                System.out.println("Read error: " + e.getMessage());
                 throw new RuntimeException(e);
             }
-            if (currentLength > 0)
-                expectedLength = NetworkEnvelope.parseLength(new ByteArrayInputStream(buffer.array()));
 
-            if (currentLength < 0) return null;
+            if (currentLength > 0) {
+                expectedLength = NetworkEnvelope.parseLength(
+                        new ByteArrayInputStream(buffer.array(), 0, currentLength)
+                );
+                System.out.println("Expected length: " + expectedLength + ", current: " + currentLength);
+            }
 
         } while (currentLength < expectedLength);
 
-        var envelope = NetworkEnvelope.parse(new ByteArrayInputStream(buffer.array()), testnet);
+        if (currentLength > 0) {
+            System.out.println("Received complete message, length: " + currentLength);
+            byte[] receivedData = new byte[currentLength];
+            buffer.rewind();
+            buffer.get(receivedData, 0, currentLength);
+            System.out.println("Raw data: " + Bytes.byteArrayToHexString(receivedData));
 
-        if (logging) {
-            log.fine("Received %s".formatted(envelope));
+            try {
+                var envelope = NetworkEnvelope.parse(
+                        new ByteArrayInputStream(receivedData), testnet
+                );
+                System.out.println("Parsed envelope: " + envelope);
+                return envelope;
+            } catch (Exception e) {
+                System.out.println("Parse error: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
         }
-        return envelope;
+
+        return null;
     }
 
     /**
@@ -103,7 +138,8 @@ public class SimpleNode {
         while (!commands.contains(command)) {
             envelope = read();
             if (envelope != null) {
-                command = Bytes.byteArrayToHexString(envelope.getCommand());
+                command = new String(envelope.getCommand());
+                System.out.println("Received command: " + new String(envelope.getCommand(), StandardCharsets.UTF_8));
 
                 if (command.equals(VerAckMessage.COMMAND)) {
                     send(new VerAckMessage());
@@ -123,16 +159,16 @@ public class SimpleNode {
      * @return a {@code byte} array
      */
     public byte[] handshake() {
+        // create a version message
         var version = new VersionMessage();
-
-        send(version);
-
-        var envelope = waitFor(Set.of(VerAckMessage.COMMAND));
+        // send the command
+        this.send(version);
+        // wait for a version message
+        var envelope = this.waitFor(Set.of(VerAckMessage.COMMAND));
         if (envelope == null) {
-            System.out.println("Handshake failed");
+            log.severe("no verack or sendcmpct");
             return new byte[0];
         }
-
         return envelope.getPayload();
     }
 

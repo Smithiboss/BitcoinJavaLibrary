@@ -52,8 +52,7 @@ public class SimpleNode {
      * @param message an object implementing {@link Message}
      */
     public void send(Message message) {
-        var rawMessage = Bytes.hexStringToByteArray("F9BEB4D976657273696F6E0000000000550000002C2F86F37E1101000000000000000000C515CF6100000000000000000000000000000000000000000000FFFF2E13894A208D000000000000000000000000000000000000FFFF7F000001208D00000000000000000000000000");
-        var envelope = new NetworkEnvelope(message.getCommand(), rawMessage, testnet);
+        var envelope = new NetworkEnvelope(message.getCommand(), message.serialize(), testnet);
         System.out.println(Bytes.byteArrayToHexString(envelope.serialize()));
 
         if (logging) {
@@ -61,7 +60,7 @@ public class SimpleNode {
         }
 
         try {
-            socket.write(ByteBuffer.wrap(rawMessage));
+            socket.write(ByteBuffer.wrap(envelope.serialize()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,13 +1,16 @@
 package org.smithiboss.network;
 
 import org.smithiboss.utils.Bytes;
+import org.smithiboss.utils.Helper;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -21,6 +24,7 @@ public class SimpleNode {
     private final Boolean testnet;
     private final Boolean logging;
     private final SocketChannel socket;
+    private ByteArrayOutputStream leftoverBuffer = new ByteArrayOutputStream();
 
     public SimpleNode(String host, Integer port, Boolean testnet, Boolean logging) {
         this.host = host;
@@ -75,53 +79,47 @@ public class SimpleNode {
         int currentLength = 0;
         int expectedLength = -1;
 
+        byte[] leftovers = leftoverBuffer.toByteArray();
+        System.out.println("Leftovers: " + Bytes.byteArrayToHexString(leftovers));
+        leftoverBuffer.reset();
+        System.arraycopy(leftovers, 0, buffer.array(), 0, leftovers.length);
+        currentLength += leftovers.length;
+
+        if (currentLength >= 24) {
+            expectedLength = NetworkEnvelope.parseLength(new ByteArrayInputStream(buffer.array()));
+            System.out.println("Expected payload length (from leftovers): " + expectedLength);
+        }
+
         System.out.println("Waiting for data...");
 
-        do {
+        while (expectedLength == -1 || currentLength < expectedLength + 24) {
+            int bytesRead = 0;
             try {
-                int bytesRead = socket.read(buffer);
-                if (bytesRead > 0) {
-                    currentLength += bytesRead;
-                    System.out.println("Read " + bytesRead + " bytes, total: " + currentLength);
-                } else if (bytesRead == -1) {
-                    System.out.println("Connection closed by peer");
-                    return null;
-                }
+                bytesRead = socket.read(buffer);
             } catch (IOException e) {
                 System.out.println("Read error: " + e.getMessage());
                 throw new RuntimeException(e);
             }
 
-            if (currentLength > 0) {
-                expectedLength = NetworkEnvelope.parseLength(
-                        new ByteArrayInputStream(buffer.array(), 0, currentLength)
-                );
-                System.out.println("Expected length: " + expectedLength + ", current: " + currentLength);
-            }
+            if (bytesRead < 0) return null;
 
-        } while (currentLength < expectedLength);
+            currentLength += bytesRead;
 
-        if (currentLength > 0) {
-            System.out.println("Received complete message, length: " + currentLength);
-            byte[] receivedData = new byte[currentLength];
-            buffer.rewind();
-            buffer.get(receivedData, 0, currentLength);
-            System.out.println("Raw data: " + Bytes.byteArrayToHexString(receivedData));
-
-            try {
-                var envelope = NetworkEnvelope.parse(
-                        new ByteArrayInputStream(receivedData), testnet
-                );
-                System.out.println("Parsed envelope: " + envelope);
-                return envelope;
-            } catch (Exception e) {
-                System.out.println("Parse error: " + e.getMessage());
-                e.printStackTrace();
-                return null;
+            if (expectedLength == -1 && currentLength >= 24) {
+                expectedLength = NetworkEnvelope.parseLength(new ByteArrayInputStream(buffer.array()));
+                System.out.println("Expected payload length: " + expectedLength);
             }
         }
 
-        return null;
+        ByteArrayInputStream input = new ByteArrayInputStream(buffer.array(), 0, expectedLength + 24);
+        NetworkEnvelope envelope = NetworkEnvelope.parse(input, testnet);
+
+        int leftoverStart = expectedLength + 24;
+        int leftoverEnd = currentLength;
+        byte[] remaining = Arrays.copyOfRange(buffer.array(), leftoverStart, leftoverEnd);
+        leftoverBuffer.writeBytes(remaining);
+
+        return envelope;
     }
 
     /**

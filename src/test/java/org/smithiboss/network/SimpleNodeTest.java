@@ -7,7 +7,7 @@ public class SimpleNodeTest {
 
     @Test
     public void testHandshake() {
-        var node = new SimpleNode("188.245.65.246", 8333, false, null);
+        var node = new SimpleNode("142.132.210.177", 8333, false, null);
         assertNotNull(node.handshake());
         node.close();
     }

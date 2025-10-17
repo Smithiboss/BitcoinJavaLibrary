@@ -53,6 +53,8 @@ Over time, I plan to implement more complex functionality of the Bitcoin protoco
 
 ## Future Plans
 
+This project is still under active development. Here are some features I plan to implement:
+
 - Taproot
 - ...
 

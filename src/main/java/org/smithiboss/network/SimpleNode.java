@@ -24,7 +24,7 @@ public class SimpleNode {
     private final Boolean testnet;
     private final Boolean logging;
     private final SocketChannel socket;
-    private ByteArrayOutputStream leftoverBuffer = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream leftoverBuffer = new ByteArrayOutputStream();
 
     public SimpleNode(String host, Integer port, Boolean testnet, Boolean logging) {
         this.host = host;

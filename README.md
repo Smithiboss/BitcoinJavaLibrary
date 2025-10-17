@@ -1,10 +1,58 @@
-**JAVA BITCOIN LIBRARY**
+# Java Bitcoin Library
 
-This repository is a Java translation of the book *Programming Bitcoin* by Jimmy Song. It follows the structure and examples of the original Python code, reimplemented in Java for educational purposes.
-It includes implementations of basic cryptographic primitives such as ECDSA, as well as a simple Bitcoin node capable of performing handshakes with other nodes.
+A Java-based implementation of the concepts from [*Programming Bitcoin*](https://github.com/jimmysong/programmingbitcoin) by Jimmy Song.  
+This project reimagines the book's Python examples in Java — for learning and exploration of Bitcoin’s technical foundations.
 
-**Note**: This project is not production-ready and should be used for learning and experimentation only
+---
 
+# ⚠️ Disclaimer
 
-This is a personal learning project to help me better understand how Bitcoin works on a technical level such as cryptography, network protocols, and Bitcoin internals. I plan to gradually implement more complex functionality over time as I continue to explore the protocol in greater depth.
+**THIS PROJECT IS NOT PRODUCTION-READY.**
 
+It is intended strictly for educational and experimental purposes.
+
+Do **NOT** use this software in real Bitcoin transactions, wallets,
+or any systems that handle real funds.
+
+The cryptographic and networking code provided here is simplified
+for learning and does not undergo professional security reviews.
+**USE AT YOUR OWN RISK.**
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Running Tests](#running-tests)
+
+---
+
+## Overview
+
+This is a **personal learning project** designed to deepen my understanding of:
+
+- Bitcoin internals
+- Cryptographic primitives (e.g. ECDSA)
+- Peer-to-peer network protocols
+
+Over time, I plan to implement more complex functionality of the Bitcoin protocol.
+
+---
+
+## Features
+
+- Pure Java implementation (no JNI/native crypto libs)
+- ECDSA (Elliptic Curve Digital Signature Algorithm)
+- Create and verify Bitcoin transactions (except Taproot)
+- Bitcoin message parsing and basic P2P handshakes
+- Unit tests
+
+---
+
+## Running Tests
+
+You can run all tests using Maven:
+
+```bash
+mvn clean test

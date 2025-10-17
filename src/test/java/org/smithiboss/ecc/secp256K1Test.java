@@ -1,7 +1,7 @@
 package org.smithiboss.ecc;
 
-import org.smithiboss.Chapter3.SHA256Hasher;
 import org.junit.Test;
+import org.smithiboss.utils.Hash;
 
 import java.util.HexFormat;
 
@@ -100,8 +100,8 @@ public class secp256K1Test {
 
     @Test
     public void testSignAndVerify() {
-        var e = Hex.parse(SHA256Hasher.hash("my secret"));
-        var z = Hex.parse(SHA256Hasher.hash("my message"));
+        var e = Hex.parse(Hash.sha256("my secret".getBytes()));
+        var z = Hex.parse(Hash.sha256("my message".getBytes()));
         PrivateKey privateKey = new PrivateKey(e);
         Signature sig = privateKey.sign(z);
         S256Point point = S256Point.G.mul(e);

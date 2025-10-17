@@ -1,11 +1,11 @@
-# Java Bitcoin Library
+# Bitcoin Java Library
 
-A Java-based implementation of the concepts from [*Programming Bitcoin*](https://github.com/jimmysong/programmingbitcoin) by Jimmy Song.  
-This project reimagines the book's Python examples in Java — for learning and exploration of Bitcoin’s technical foundations.
+A Java implementation of the book [*Programming Bitcoin*](https://github.com/jimmysong/programmingbitcoin) by Jimmy Song.  
+This project was created as a personal learning tool to better understand how Bitcoin works on a technical level.
 
 ---
 
-# ⚠️ Disclaimer
+## ⚠️ Disclaimer
 
 **THIS PROJECT IS NOT PRODUCTION-READY.**
 
@@ -24,6 +24,7 @@ for learning and does not undergo professional security reviews.
 
 - [Overview](#overview)
 - [Features](#features)
+- [Future Plans](#future-plans)
 - [Running Tests](#running-tests)
 
 ---
@@ -44,9 +45,16 @@ Over time, I plan to implement more complex functionality of the Bitcoin protoco
 
 - Pure Java implementation (no JNI/native crypto libs)
 - ECDSA (Elliptic Curve Digital Signature Algorithm)
-- Create and verify Bitcoin transactions (except Taproot)
+- Create and verify Bitcoin transactions 
 - Bitcoin message parsing and basic P2P handshakes
 - Unit tests
+
+---
+
+## Future Plans
+
+- Taproot
+- ...
 
 ---
 
@@ -56,3 +64,6 @@ You can run all tests using Maven:
 
 ```bash
 mvn clean test
+```
+
+

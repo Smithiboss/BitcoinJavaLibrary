@@ -23,7 +23,7 @@ public class SimpleNode {
     private final Integer port;
     private final Boolean testnet;
     private final Boolean logging;
-    private final SocketChannel socket;
+    private SocketChannel socket;
     private final ByteArrayOutputStream leftoverBuffer = new ByteArrayOutputStream();
 
     public SimpleNode(String host, Integer port, Boolean testnet, Boolean logging) {
@@ -41,13 +41,9 @@ public class SimpleNode {
             this.socket = SocketChannel.open();
             socket.configureBlocking(true);
             socket.connect(new InetSocketAddress(this.host, this.port));
-            if (socket.isConnected()) {
-                System.out.println("✓ Successfully connected to " + host + ":" + port);
-            } else {
-                System.out.println("✗ Connection failed");
-            }
+            log.info("Successfully connected to %s:%s".formatted(this.host, this.port));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.severe("Connection failed: " + e.getMessage());
         }
     }
 
@@ -57,16 +53,15 @@ public class SimpleNode {
      */
     public void send(Message message) {
         var envelope = new NetworkEnvelope(message.getCommand(), message.serialize(), testnet);
-        System.out.println(Bytes.byteArrayToHexString(envelope.serialize()));
 
         if (logging) {
-            log.fine("Sending %s".formatted(envelope));
+            log.info("Sending %s message".formatted(new String(envelope.getCommand(), StandardCharsets.UTF_8)));
         }
 
         try {
             socket.write(ByteBuffer.wrap(envelope.serialize()));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.severe("Write error: " + e.getMessage());
         }
     }
 
@@ -79,41 +74,50 @@ public class SimpleNode {
         int currentLength = 0;
         int expectedLength = -1;
 
+        // load leftover bytes into the buffer array
         byte[] leftovers = leftoverBuffer.toByteArray();
-        System.out.println("Leftovers: " + Bytes.byteArrayToHexString(leftovers));
+        if (logging && leftovers.length > 0) {
+            log.info("Found leftovers: %s".formatted(Bytes.byteArrayToHexString(leftovers)));
+        } else if (logging) {
+            log.info("No leftovers found");
+        }
         leftoverBuffer.reset();
         System.arraycopy(leftovers, 0, buffer.array(), 0, leftovers.length);
         currentLength += leftovers.length;
 
+        // calculate the expected payload length from leftover bytes
         if (currentLength >= 24) {
             expectedLength = NetworkEnvelope.parseLength(new ByteArrayInputStream(buffer.array()));
-            System.out.println("Expected payload length (from leftovers): " + expectedLength);
         }
 
-        System.out.println("Waiting for data...");
+        if (logging) {
+            log.info("Waiting for data...");
+        }
 
+        // read bytes from the socket
         while (expectedLength == -1 || currentLength < expectedLength + 24) {
             int bytesRead = 0;
             try {
                 bytesRead = socket.read(buffer);
             } catch (IOException e) {
-                System.out.println("Read error: " + e.getMessage());
-                throw new RuntimeException(e);
+                log.severe("Read error: " + e.getMessage());
             }
 
             if (bytesRead < 0) return null;
 
             currentLength += bytesRead;
 
+            // calculate the expected payload length if not yet calculated
             if (expectedLength == -1 && currentLength >= 24) {
                 expectedLength = NetworkEnvelope.parseLength(new ByteArrayInputStream(buffer.array()));
-                System.out.println("Expected payload length: " + expectedLength);
             }
         }
 
+        // get all bytes of the first message received and parse it
         ByteArrayInputStream input = new ByteArrayInputStream(buffer.array(), 0, expectedLength + 24);
         NetworkEnvelope envelope = NetworkEnvelope.parse(input, testnet);
 
+        // save following bytes
         int leftoverStart = expectedLength + 24;
         int leftoverEnd = currentLength;
         byte[] remaining = Arrays.copyOfRange(buffer.array(), leftoverStart, leftoverEnd);
@@ -129,25 +133,26 @@ public class SimpleNode {
      */
     public NetworkEnvelope waitFor(Set<String> commands) {
         String command = "";
-
         NetworkEnvelope envelope = null;
-
+        // repeat until command is received
         while (!commands.contains(command)) {
             envelope = read();
             if (envelope != null) {
                 command = new String(envelope.getCommand());
-                System.out.println("Received command: " + new String(envelope.getCommand(), StandardCharsets.UTF_8));
-
+                if (logging) {
+                    log.info("Received %s message".formatted(new String(envelope.getCommand(), StandardCharsets.UTF_8)));
+                }
                 if (command.equals(VerAckMessage.COMMAND)) {
+                    // respond with a verack message if a verack message is received
                     send(new VerAckMessage());
                 } else if (command.equals(PingMessage.COMMAND)) {
+                    // respond with a pong message if a ping message is received
                     send(new PongMessage(envelope.getPayload()));
                 }
             } else {
                 break;
             }
         }
-
         return envelope;
     }
 
@@ -163,8 +168,11 @@ public class SimpleNode {
         // wait for a version message
         var envelope = this.waitFor(Set.of(VerAckMessage.COMMAND));
         if (envelope == null) {
-            log.severe("no verack or sendcmpct");
+            log.severe("Did not receive a verack message");
             return new byte[0];
+        }
+        if (logging) {
+            log.info("Handshake successful");
         }
         return envelope.getPayload();
     }
@@ -176,7 +184,7 @@ public class SimpleNode {
         try {
             socket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.severe("Error while closing connection: " + e.getMessage());
         }
     }
 }

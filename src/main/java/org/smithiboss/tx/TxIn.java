@@ -24,13 +24,9 @@ public class TxIn {
         this.sequence = sequence;
     }
 
-    @Override
-    public String toString() {
-        return prevTx + ":" + prevIndex;
-    }
-
     /**
      * Takes a byte stream and parses the txInput at the start.
+     *
      * @param s a {@link ByteArrayInputStream}
      * @return a {@link TxIn} object
      */
@@ -41,14 +37,14 @@ public class TxIn {
         Int prevIndex = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
         // Get ScriptSig
         Script scriptSig = Script.parse(s);
-        // Get sequence
+        // Get the sequence
         Int sequence = Hex.parse(Bytes.reverseOrder(Bytes.read(s, 4)));
-
         return new TxIn(prevTx, prevIndex, scriptSig, sequence);
     }
 
     /**
-     * Returns the byte serialization of the transaction input
+     * Returns the byte serialization of the transaction input.
+     *
      * @return a {@code byte} array
      */
     public byte[] serialize() {
@@ -62,9 +58,11 @@ public class TxIn {
     }
 
     /**
+     * Fetches the transaction associated with this transaction input by looking up the
+     * previous transaction hash.
      *
-     * @param testnet a {@code boolean}
-     * @return a {@link Tx} object
+     * @param testnet a {@code boolean} indicating whether to use the testnet or mainnet
+     * @return a {@link Tx} object representing the fetched transaction
      */
     public Tx fetch(boolean testnet) {
         return TxFetcher.fetch(prevTx.toHex().toString(), testnet);
@@ -72,6 +70,7 @@ public class TxIn {
 
     /**
      * Get the output value by looking up the tx hash. Returns the amount in satoshi.
+     *
      * @param testnet a {@code boolean}
      * @return a {@link Int} object
      */
@@ -82,6 +81,7 @@ public class TxIn {
 
     /**
      * Get the ScriptPubKey by looking up the tx hash. Returns a Script object.
+     *
      * @param testnet a {@code boolean}
      * @return a {@link Object} object
      */
@@ -116,5 +116,10 @@ public class TxIn {
 
     public void setWitness(Script witness) {
         this.witness = witness;
+    }
+
+    @Override
+    public String toString() {
+        return prevTx + ":" + prevIndex;
     }
 }

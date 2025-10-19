@@ -37,28 +37,6 @@ public class Tx {
         this.segwit = Objects.requireNonNullElse(segwit, false);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        StringBuilder txInsStr = new StringBuilder();
-        for (TxIn txIn : txIns) {
-            txInsStr.append(txIn.toString()).append("\n");
-        }
-
-        StringBuilder txOutsStr = new StringBuilder();
-        for (TxOut txOut : txOuts) {
-            txOutsStr.append(txOut.toString()).append("\n");
-        }
-
-        return String.format("tx: %s\nversion: %s\ntx_ins:\n%stx_outs:\n%slocktime: %s",
-                this.getId(),
-                version,
-                txInsStr,
-                txOutsStr,
-                lockTime
-        );
-    }
-
     /**
      * Parses a transaction from a byte stream and determines if it's a legacy or segwit transaction.
      *
@@ -112,7 +90,6 @@ public class Tx {
         var version = Helper.littleEndianToInt(Bytes.read(s, 4));
         // inputNum is a varint, use readVarint(s)
         var inputNum = Helper.readVarint(s).intValue();
-        System.out.println("inputNum: " + inputNum);
         // parseLegacy inputNum number of TxIns
         List<TxIn> inputs = new ArrayList<>();
         for (int i = 0; i < inputNum; i++) {
@@ -120,7 +97,6 @@ public class Tx {
         }
         // outputNum is a varint, use readVarint(s)
         var outputNum = Helper.readVarint(s).intValue();
-        System.out.println("outputNum: " + outputNum);
         // parseLegacy outputNum number of TxOuts
         List<TxOut> outputs = new ArrayList<>();
         for (int i = 0; i < outputNum; i++) {
@@ -174,6 +150,7 @@ public class Tx {
 
     /**
      * Returns the byte serialization of the transaction
+     *
      * @return a {@code byte} array
      */
     public byte[] serialize() {
@@ -186,6 +163,7 @@ public class Tx {
 
     /**
      * Returns the byte serialization of the transaction
+     *
      * @return a {@code byte} array
      */
     public byte[] serializeLegacy() {
@@ -214,6 +192,7 @@ public class Tx {
 
     /**
      * Returns the byte serialization of the transaction in segwit format.
+     *
      * @return a {@code byte} array
      */
     public byte[] serializeSegwit() {
@@ -244,7 +223,8 @@ public class Tx {
     }
 
     /**
-     * Returns the hash that needs to be signed for given index as an integer
+     * Returns the hash that needs to be signed for the given input index as a {@link Int} object.
+     *
      * @param inputIndex a {@code int}
      * @return a {@link Int} object
      */
@@ -258,7 +238,7 @@ public class Tx {
         for (int i = 0; i < txIns.size(); i++) {
             var txIn = txIns.get(i);
             Script scriptSig;
-            // check if input index is reached
+            // check if the input index is reached
             if (i == inputIndex) {
                 // copy scriptPubKey from output of previous transaction
                 if (redeemScript != null) {
@@ -374,27 +354,32 @@ public class Tx {
      */
     public boolean verifyInput(int inputIndex) {
         var txIn = txIns.get(inputIndex);
-        // get the scriptPubkey of previous output
+        // get the script pubkey of previous output
         var scriptPubKey = txIn.scriptPubkey(this.testnet);
         Script redeemScript = null;
         Int z = null;
         Script witness = null;
-        // check if ScriptPubKey is p2sh
+        // check whether the ScriptPubKey is a p2sh script pubkey
         if (scriptPubKey.isP2shScriptPubkey()) {
-            // get redeem script
+            // get the redeem script
             var cmd = txIn.getScriptSig().getCmds().getLast();
-            // add varint
+            // add a varint
             var rawRedeem = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
-            // parse redeem script
+            // parse the redeem script
             redeemScript = Script.parse(new ByteArrayInputStream(rawRedeem));
-
             if (redeemScript.isP2wpkhScriptPubkey()) {
+                // generate the signature hash according to BIP-143 with the redeem script
                 z = sigHashBip143(inputIndex, redeemScript, null);
+                // get the witness
                 witness = txIn.getWitness();
             } else if (redeemScript.isP2wshScriptPubkey()) {
+                // get the witness script
                 cmd = txIn.getWitness().getCmds().getLast();
+                // add a varint to the raw witness script
                 var rawWitness = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+                // parse the witness script
                 var witnessScript = Script.parse(new ByteArrayInputStream(rawWitness));
+                // generate the signature hash according to BIP-143 with the witness script
                 z = sigHashBip143(inputIndex, null, witnessScript);
                 witness = txIn.getWitness();
             } else {
@@ -402,26 +387,34 @@ public class Tx {
             }
         } else {
             if (scriptPubKey.isP2wpkhScriptPubkey()) {
+                // generate the signature hash according to BIP-143
                 z = sigHashBip143(inputIndex, null, null);
+                // get the witness
                 witness = txIn.getWitness();
             } else if (scriptPubKey.isP2wshScriptPubkey()) {
+                // get the witness script
                 var cmd = txIn.getWitness().getCmds().getLast();
+                // add a varint to the raw witness script
                 var rawWitness = Bytes.concat(Helper.encodeVarInt(Int.parse(cmd.getElement().length)), cmd.getElement());
+                // parse the witness script
                 var witnessScript = Script.parse(new ByteArrayInputStream(rawWitness));
+                // generate the signature hash according to BIP-143 with the witness script
                 z = sigHashBip143(inputIndex, null, witnessScript);
                 witness = txIn.getWitness();
             } else {
+                // generate the signature hash with the legacy sigHash function
                 z = sigHash(inputIndex, null);
             }
         }
-        // combine Script Signature and Script PubKey
+        // combine the script signature and the script pubKey
         var combined = txIn.getScriptSig().add(scriptPubKey);
         // evaluate the combined script
         return combined.evaluate(z, witness);
     }
 
     /**
-     * Verify this transaction
+     * Verifies this transaction
+     *
      * @return a {@code boolean}
      */
     public boolean verify() {
@@ -439,20 +432,21 @@ public class Tx {
     }
 
     /**
-     * Signs input with the provided private key
+     * Signs the input with the provided private key
+     *
      * @param inputIndex a {@code int}
      * @param privateKey a {@link PrivateKey} object
      * @return a {@code boolean}
      */
     public boolean signInput(int inputIndex, PrivateKey privateKey) {
         var z = sigHash(inputIndex, null);
-        // create signature of z and serialize with DER
+        // create a signature of z and serialize with DER
         var der = privateKey.sign(z).der();
         // append SIGHASH_ALL to der
         var sig = Bytes.concat(der, Hash.SIGHASH_ALL.toBytes(1));
         // get sec
         var sec = privateKey.getPublicKey().sec(true);
-        // create new script with [sig, sec] as cmds
+        // create a new script with [sig, sec] as cmds
         var script = new Script(List.of(new Cmd(sig), new Cmd(sec)));
         // set inputs scriptSig to script
         this.txIns.get(inputIndex).setScriptSig(script);
@@ -462,14 +456,17 @@ public class Tx {
 
     /**
      * Calculates the fee
+     *
      * @return a {@link Int} object
      */
     public Int fee() {
         var inputSum = Int.parse(0);
         var outputSum = Int.parse(0);
+        // add all inputs to inputSum
         for (TxIn txIn : txIns) {
             inputSum = inputSum.add(txIn.value(this.testnet));
         }
+        // add all outputs to outputSum
         for (TxOut txOut : txOuts) {
             outputSum = outputSum.add(txOut.amount());
         }
@@ -478,6 +475,7 @@ public class Tx {
 
     /**
      * Returns whether this transaction is a coinbase transaction
+     *
      * @return a {@code boolean}
      */
     public boolean isCoinBase() {
@@ -493,6 +491,7 @@ public class Tx {
 
     /**
      * Returns the height of the block / the height of this coinbase transaction
+     *
      * @return a {@link Int} object
      */
     public Int coinbaseHeight() {
@@ -506,6 +505,7 @@ public class Tx {
 
     /**
      * Returns a human-readable hexadecimal of the transaction hash
+     *
      * @return a {@link String} object
      */
     public String getId() {
@@ -514,6 +514,7 @@ public class Tx {
 
     /**
      * Returns a binary hash of the legacy serialization
+     *
      * @return a {@code byte} array
      */
     private byte[] hash() {
@@ -521,42 +522,69 @@ public class Tx {
     }
 
     /**
-     * Returns version
+     * Returns the version
+     *
      * @return a {@link Int} object
      */
     public Int getVersion() {return version;}
 
     /**
-     * Returns transaction inputs
+     * Returns the transaction inputs
+     *
      * @return a {@link List}
      */
     public List<TxIn> getTxIns() {return txIns;}
 
     /**
-     * Returns transaction outputs
+     * Returns the transaction outputs
+     *
      * @return a {@link List}
      */
     public List<TxOut> getTxOuts() {return txOuts;}
 
     /**
-     * Returns locktime
+     * Returns the locktime
+     *
      * @return a {@link Int} object
      */
     public Int getLockTime() {return lockTime;}
 
     /**
-     * Returns testnet value
+     * Returns the testnet value
+     *
      * @return a {@code boolean}
      */
     public boolean isTestnet() {return testnet;}
 
     /**
-     * Sets locktime
+     * Sets the locktime
      */
     public void setLockTime(Int lockTime) {this.lockTime = lockTime;}
 
     /**
-     * Sets testnet
+     * Sets the testnet value
      */
     public void setTestnet(boolean testnet) {this.testnet = testnet;}
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder txInsStr = new StringBuilder();
+        for (TxIn txIn : txIns) {
+            txInsStr.append(txIn.toString()).append("\n");
+        }
+
+        StringBuilder txOutsStr = new StringBuilder();
+        for (TxOut txOut : txOuts) {
+            txOutsStr.append(txOut.toString()).append("\n");
+        }
+
+        return String.format("tx: %s\nversion: %s\ntx_ins:\n%stx_outs:\n%slocktime: %s",
+                this.getId(),
+                version,
+                txInsStr,
+                txOutsStr,
+                lockTime
+        );
+    }
 }

@@ -21,10 +21,10 @@ public class TestnetTransaction {
 
     @Test
     public void createAddress() {
-        var privateKey = new PrivateKey(Helper.littleEndianToInt("BeppoIstEinGoofy".getBytes()));
+        var privateKey = new PrivateKey(Helper.littleEndianToInt("donttrustverify".getBytes()));
         var address = privateKey.getPublicKey().address(true, true);
         log.info(address);
-        var privateKey2 = new PrivateKey(Helper.littleEndianToInt("BeppoIstEinRiesenGoofy".getBytes()));
+        var privateKey2 = new PrivateKey(Helper.littleEndianToInt("notyourkeysnotyourcoins".getBytes()));
         var address2 = privateKey2.getPublicKey().address(true, true);
         log.info(address2);
     }

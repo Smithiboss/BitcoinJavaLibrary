@@ -12,6 +12,7 @@ public class Base58 {
 
     /**
      * Takes a {@code byte} array and returns the Base58 string
+     *
      * @param input a {@code byte} array
      * @return a {@link String} object
      */
@@ -46,6 +47,7 @@ public class Base58 {
 
     /**
      * Get the number represented by Base58
+     *
      * @param s a {@link String} object
      * @return a {@link Int} object
      */
@@ -61,7 +63,8 @@ public class Base58 {
     }
 
     /**
-     * Get 20-byte hash from address
+     * Get the 20-byte hash from an address
+     *
      * @param address a {@link String} object
      * @return a {@code byte} array
      */
@@ -84,23 +87,14 @@ public class Base58 {
         return Arrays.copyOfRange(combined, 1, combined.length - 4);
     }
 
-    public static byte[] hexStringToBytes(String hex) {
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
-    }
-
     /**
      * Encodes the address checksum
+     *
      * @param input a {@code byte} array
      * @return a {@link String} object
      */
     public static String encodeChecksum(byte[] input) {
-        // hashes input array with hash256 and takes the first 4 bytes
+        // hashes the input array with hash256 and takes the first 4 bytes
         byte[] checksum = Arrays.copyOfRange(Hash.hash256(input), 0, 4);
         // returns the encoded combination of input + checksum in Base58
         return Base58.encode(Bytes.concat(input, checksum));
@@ -108,6 +102,7 @@ public class Base58 {
 
     /**
      * Returns the p2pkh address from a h160 hash
+     *
      * @param h160 a {@code byte} array
      * @param testnet a {@code boolean}
      * @return a {@link String} object
@@ -124,6 +119,7 @@ public class Base58 {
 
     /**
      * Returns the p2sh address from a h160 hash
+     *
      * @param h160 a {@code byte} array
      * @param testnet a {@code boolean}
      * @return a {@link String} object

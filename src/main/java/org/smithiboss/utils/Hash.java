@@ -25,7 +25,8 @@ public class Hash {
     }
 
     /**
-     * Applies SHA-256 on given {@code byte} array
+     * Applies SHA-256 on the given {@code byte} array
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */
@@ -39,7 +40,8 @@ public class Hash {
     }
 
     /**
-     * Applies two rounds of SHA-256 on given {@code byte} array
+     * Applies two rounds of SHA-256 on the given {@code byte} array
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */
@@ -48,7 +50,8 @@ public class Hash {
     }
 
     /**
-     * Applies SHA-256 followed by Ripemd160 on given {@code byte} array
+     * Applies SHA-256 followed by Ripemd160 on the given {@code byte} array
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */
@@ -57,7 +60,8 @@ public class Hash {
     }
 
     /**
-     * Applies Ripemd160 on given {@code byte} array
+     * Applies Ripemd160 on the given {@code byte} array
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */

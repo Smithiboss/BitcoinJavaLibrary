@@ -4,11 +4,8 @@ import org.smithiboss.ecc.Hex;
 import org.smithiboss.ecc.Int;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Helper {
@@ -16,6 +13,7 @@ public class Helper {
 
     /**
      * Takes a {@code byte} array in little endian and computes the {@link Int} object
+     *
      * @param bytes a {@code byte} array
      * @return a {@link Int} object
      */
@@ -25,46 +23,8 @@ public class Helper {
     }
 
     /**
-     * Takes a {@link BigInteger} object and an {@code int} and returns the value as a {@code byte} array
-     * in little endian with the length of the {@code byte} array matching the given {@code int}
-     * @param value a {@link BigInteger} object
-     * @param byteLength an {@code int}
-     * @return a {@code byte} array
-     */
-    public static byte[] bigIntToLittleEndian(BigInteger value, int byteLength) {
-        byte[] temp = value.toByteArray();
-
-        // remove leading zero bytes if necessary
-        if (temp.length > byteLength) {
-            temp = Arrays.copyOfRange(temp, temp.length - byteLength, temp.length);
-        }
-
-        // fills the array with leading zeros in order to match byteLength
-        byte[] result = new byte[byteLength];
-        int copyStart = byteLength - temp.length;
-        System.arraycopy(temp, 0, result, copyStart, temp.length);
-
-        // reverse order for little endian
-        Bytes.reverseOrder(result);
-
-        return result;
-    }
-
-    public static byte[] readBytes(InputStream s, int n) throws IOException {
-        byte[] buffer = new byte[n];
-        int read = 0;
-        while (read < n) {
-            int r = s.read(buffer, read, n - read);
-            if (r == -1) {
-                throw new IOException("Stream ended too early");
-            }
-            read += r;
-        }
-        return buffer;
-    }
-
-    /**
      * Reads a variable integer from a stream
+     *
      * @param s a {@link InputStream}
      * @return a {@link Int} object
      */
@@ -84,6 +44,7 @@ public class Helper {
 
     /**
      * Encodes an integer as a varint. This is used to save space.
+     *
      * @param i a {@link Int} object
      * @return a {@code byte} array
      */
@@ -107,6 +68,7 @@ public class Helper {
 
     /**
      * Calculates the merkle parent hash with the given child hashes
+     *
      * @param hash1 a {@code byte} array
      * @param hash2 a {@code byte} array
      * @return a {@code byte} array
@@ -117,6 +79,7 @@ public class Helper {
 
     /**
      * Computes the merkle parent hash
+     *
      * @param hashes a {@code byte} array
      * @return a {@link List} of {@code byte} arrays
      */
@@ -136,6 +99,7 @@ public class Helper {
 
     /**
      * Computes the merkle root of given hashes
+     *
      * @param hashes  {@link List} of {@code byte} arrays
      * @return a {@code byte} array
      */
@@ -148,11 +112,12 @@ public class Helper {
     }
 
     /**
-     * Masks given {@link String} object by given length
+     * Masks a string by keeping a specified number of characters at the beginning and at the end
+     * and replaces the rest with a colon.
      *
-     * @param str a {@link String} object
-     * @param len an {@code int}
-     * @return a {@link String} object
+     * @param str the original string to be masked
+     * @param len the number of characters to keep at both the beginning and end of the string
+     * @return a new string with the middle portion replaced by a colon
      */
     public static String maskString(String str, int len) {
         return str.substring(0, len) + ":" + str.substring(str.length() - len);
@@ -163,10 +128,11 @@ public class Helper {
     }
 
     /**
-     * Computes log with given base
-     * @param x a {@code double}
-     * @param base a {@code double}
-     * @return a {@code double}
+     * Calculates the logarithm of a given number with a specified base.
+     *
+     * @param x the number for which the logarithm is to be calculated
+     * @param base the base of the logarithm
+     * @return the calculated logarithm of the number with the specified base
      */
     public static double log(double x, double base) {
         return Math.log(x) / Math.log(base);

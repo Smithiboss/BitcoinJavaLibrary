@@ -6,6 +6,7 @@ public class Murmur3 {
 
     /**
      * Implementation of Murmur3 x86_32
+     *
      * @param data input bytes
      * @param seed 32-bit seed (unsigned behavior is achieved by & 0xffffffffL when needed)
      * @return 32-bit hash (as Java signed int)

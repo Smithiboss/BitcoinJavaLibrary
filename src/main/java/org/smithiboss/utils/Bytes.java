@@ -20,6 +20,7 @@ public class Bytes {
 
     /**
      * Fills a byte array with given filler byte
+     *
      * @param length int
      * @param filler byte
      * @return byte array
@@ -32,6 +33,7 @@ public class Bytes {
 
     /**
      * Reverses the byte order
+     *
      * @param bytes byte array
      * @return byte array
      */
@@ -47,6 +49,7 @@ public class Bytes {
 
     /**
      * Concatenates any amount of {@code byte} arrays
+     *
      * @param arrays {@code byte} array
      * @return byte array
      */
@@ -62,9 +65,10 @@ public class Bytes {
     }
 
     /**
-     * Returns an array of random bytes of length
-     * @param length a {@code int}
-     * @return a {@code byte} array
+     * Generates a random byte array of the specified length.
+     *
+     * @param length the length of the array to be generated
+     * @return a byte array filled with random bytes
      */
     public static byte[] randomBytes(int length) {
         byte[] bytes = new byte[length];
@@ -74,6 +78,7 @@ public class Bytes {
 
     /**
      * Remove trailing zero bytes
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */
@@ -88,6 +93,7 @@ public class Bytes {
 
     /**
      * Removes leading {@code bytes} "0x00" from given {@code byte} array
+     *
      * @param bytes a {@code byte} array
      * @return a {@code byte} array
      */
@@ -97,28 +103,30 @@ public class Bytes {
         while (start < bytes.length && bytes[start] == (byte) 0x00) {
             start++;
         }
-        // Copy to new array excluding all leading 0x00 bytes
+        // Copy to a new array excluding all leading 0x00 bytes
         byte[] result = new byte[bytes.length - start];
         System.arraycopy(bytes, start, result, 0, result.length);
         return result;
     }
 
     /**
-     * Returns target from bits
+     * Returns the proof of work target from bits
+     *
      * @param bits a {@code byte} array
      * @return a {@link Int} object
      */
     public static Int bitsToTarget(byte[] bits) {
         // exponent is the last byte
         var exponent = Hex.parse(Arrays.copyOfRange(bits, bits.length - 1, bits.length));
-        // coefficient are the first 3 bytes
+        // coefficient is the first 3 bytes
         var coefficient = Helper.littleEndianToInt(Arrays.copyOfRange(bits, 0, bits.length - 1));
         // return coefficient * 256 ** (exponent - 3)
         return coefficient.mul(Int.parse(256).pow(exponent.sub(Int.parse(3))));
     }
 
     /**
-     * Turns a target into bits
+     * Turns a proof of work target into bits
+     *
      * @param target a {@link Int} object
      * @return a {@code byte} array
      */
@@ -130,7 +138,7 @@ public class Bytes {
         byte[] coefficient;
         // if the first bit in the coefficient is 1, the bits field is negative
         if (((rawBytes[0] >> 8) & 1) == 1) {
-            // since target is positive, shift everything over by 1 byte
+            // since the target is positive, shift everything over by 1 byte
             exponent = rawBytes.length + 1;
             coefficient = Bytes.concat(new byte[]{0x00}, Arrays.copyOfRange(rawBytes, 0, 2));
         } else {
@@ -145,6 +153,7 @@ public class Bytes {
 
     /**
      * Calculates the new target bits with a given 2016-block time differential and the previous target bits
+     *
      * @param previousBits a {@code byte} array
      * @param timeDifferential a {@link Int} object
      * @return a {@code byte} array
@@ -165,9 +174,13 @@ public class Bytes {
     }
 
     /**
-     * Converts a bit field to a byte array
-     * @param bitField a {@code byte} array with 1s and 0s. The length must be divisible by 8.
-     * @return a {@code byte} array with 0s and 1s. The length is the same as the given bit field.
+     * Converts a bit field represented as a {@code byte} array into a byte array where each byte
+     * corresponds to a group of 8 bits. The method assumes that the input bit field has a length
+     * divisible by 8; otherwise, it throws an {@link IllegalArgumentException}.
+     *
+     * @param bitField a {@code byte} array where each element is considered a bit (0 or 1)
+     * @return a {@code byte} array where each byte encodes a group of 8 bits from the input
+     * @throws IllegalArgumentException if the length of {@code bitField} is not divisible by 8
      */
     public static byte[] bitFieldToBytes(byte[] bitField) {
         if (bitField.length % 8 != 0) {
@@ -185,9 +198,12 @@ public class Bytes {
     }
 
     /**
-     * Converts a {@code byte} array to an array of bits
-     * @param someBytes a {@code byte} array
-     * @return a {@code byte} array
+     * Converts a {@code byte} array into a bit field represented as a {@code byte} array,
+     * where each byte in the result corresponds to an individual bit (0 or 1) from the input.
+     * Each input byte is expanded into its 8 constituent bits.
+     *
+     * @param someBytes a {@code byte} array to be converted into a bit field
+     * @return a {@code byte} array where each element is a single bit (0 or 1)
      */
     public static byte[] bytesToBitField(byte[] someBytes) {
         List<Byte> flagBits = new ArrayList<>();
@@ -209,6 +225,7 @@ public class Bytes {
 
     /**
      * Converts a {@code byte} array to a hex string
+     *
      * @param bytes a {@code byte} array
      * @return a {@link String} object
      */
@@ -226,9 +243,9 @@ public class Bytes {
     }
 
     /**
-     *
-     * @param hex
-     * @return
+     * Converts a hex string to a {@code byte} array
+     * @param hex a {@link String} object containing a hex string. The string must have even length.
+     * @return a {@code byte} array
      */
     public static byte[] hexStringToByteArray(String hex) {
         int len = hex.length();

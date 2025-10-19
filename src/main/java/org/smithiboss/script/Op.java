@@ -17,6 +17,18 @@ public class Op {
 
     private Op() {};
 
+    /**
+     * Executes the operation associated with the provided opcode by interacting
+     * with the given stack, alternate stack, and commands list. It also handles
+     * operations that require signature hashes.
+     *
+     * @param opCode the operation code specifying the operation to be executed
+     * @param stack a stack structure used during operations
+     * @param altStack an alternate stack structure used for specific operations
+     * @param cmds a list of commands that may be modified or evaluated during specific operations
+     * @param z an integer value representing the signature hash, required for certain cryptographic operations
+     * @return a boolean indicating whether the operation was successfully executed
+     */
     public static boolean operation(OpCodes opCode, Deque<byte[]> stack, Deque<byte[]> altStack, List<Cmd> cmds, Int z) {
         // OP_IF and OP_NOTIF require manipulation of the cmds array based on the top element of the stack
         if (Set.of(OpCodes.OP_99_IF.getCode(), OpCodes.OP_100_NOTIF.getCode()).contains(opCode.getCode())) {
@@ -43,6 +55,7 @@ public class Op {
             }
         }
 
+        // switch statement to execute the correct operation based on the opcode
         var opResult = false;
         switch (opCode) {
             case OP_0_0:
@@ -123,16 +136,16 @@ public class Op {
             result = Bytes.concat(result, new byte[]{(byte) (absNum & 0xff)});
             // shift absNum 8 bits to the right (division by 256, integer)
             absNum >>= 8;
-            // check if most significant bit of most significant byte is set
+            // check if the most significant bit of the most significant byte is set
             if ((result[result.length - 1] & 0x80) != 0) {
                 // if num is negative, append byte 0x80
                 if (negative) {
                     result = Bytes.concat(result, new byte[]{(byte) (0x80)});
-                // if num is positive, append byte 0x00
+                // if the num is positive, append byte 0x00
                 } else {
                     result = Bytes.concat(result, new byte[]{(byte) (0x00)});
                 }
-            // if num is negative but most significant bit of most significant byte is not set, set it
+            // if num is negative but the most significant bit of the most significant byte is not set, set it
             } else if (negative) {
                 result[result.length - 1] |= (byte) 0x80;
             }
@@ -141,7 +154,7 @@ public class Op {
     }
 
     /**
-     * Decodes the given {@code byte} array into a number
+     * Decodes the given {@code byte} array into an int
      *
      * @param bytes a {@code byte} array
      * @return an {@code int}
@@ -155,16 +168,16 @@ public class Op {
         var bigEndian = Bytes.reverseOrder(bytes);
         boolean negative;
         int result;
-        // if most significant bit of most significant byte is set, number is negative
+        // if the most significant bit of the most significant byte is set, the number is negative
         if ((bigEndian[0] & 0x80) != 0) {
             negative = true;
-            // set most significant bit to zero
+            // set the most significant bit to zero
             result = bigEndian[0] & 0x7f;
         } else {
             negative = false;
             result = bigEndian[0];
         }
-        // start with second byte
+        // start with the second byte
         for (int c = 1; c < bytes.length; c++) {
             // multiply with 256
             result <<= 8;
@@ -227,7 +240,7 @@ public class Op {
     }
 
     /**
-     * OP_VERIFY marks a transaction as invalid if top stack value is not true
+     * OP_VERIFY marks a transaction as invalid if the top stack value is not true
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -321,7 +334,7 @@ public class Op {
     }
 
     /**
-     * OP_EQUALVERIFY is the same as OP_EQUAL, but runs OP_VERIFY afterward
+     * OP_EQUALVERIFY is the same as OP_EQUAL but runs OP_VERIFY afterward
      *
      * @param stack a {@link java.util.Deque} object
      * @return a boolean
@@ -423,7 +436,7 @@ public class Op {
      * @return a {@code boolean}
      */
     static boolean opCheckSig(Deque<byte[]> stack, Int z) {
-        // stack needs two elements at least
+        // a stack needs two elements at least
         if (stack.size() < 2) {
             return false;
         }
@@ -453,9 +466,10 @@ public class Op {
 
     /**
      * OP_CHECKMULTISIG searches for an ECDSA match for every signature
-     * @param stack
-     * @param z
-     * @return
+     *
+     * @param stack a {@link Deque} object
+     * @param z a {@link Int} object
+     * @return a {@code boolean}
      */
     static boolean opCheckMultiSig(Deque<byte[]> stack, Int z) {
         if (stack.isEmpty()) return false;
@@ -467,7 +481,7 @@ public class Op {
         for (int i = 0; i < n; i++) {
             secPubKeys.add(stack.pop());
         }
-        // check if stack size matches m + 1 at least
+        // check if the stack size matches m + 1 at least
         var m = decodeNum(stack.pop());
         if (stack.size() < m + 1) return false;
         // get all signatures from the stack
@@ -491,7 +505,7 @@ public class Op {
         // loop over every signature
         for (Signature sig : sigs) {
             if (points.isEmpty()) return false;
-            // check if current point works with the signature
+            // check if the current point works with the signature
             for (S256Point point : points) {
                 points.remove(point);
                 if (point.verify(z, sig)) {
@@ -499,7 +513,7 @@ public class Op {
                 }
             }
         }
-        // the signatures a valid, push a 1 to the stack
+        // the signatures are valid, push a 1 to the stack
         stack.push(encodeNum(1));
         return true;
     }

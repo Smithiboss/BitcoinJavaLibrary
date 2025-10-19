@@ -27,6 +27,7 @@ public class Script {
 
     /**
      * Combines the command sets
+     *
      * @param other a {@link Script} object
      * @return a combined {@link Script} object
      */
@@ -39,6 +40,7 @@ public class Script {
 
     /**
      * Takes a hash160 and returns the p2pkh ScriptPubKey
+     *
      * @param h160 a {@code byte} array
      * @return a {@link Script} object
      */
@@ -54,6 +56,7 @@ public class Script {
 
     /**
      * Takes a hash160 and returns the p2sh ScriptPubKey
+     *
      * @param h160 a {@code byte} array
      * @return a {@link Script} object
      */
@@ -67,6 +70,7 @@ public class Script {
 
     /**
      * Takes a hash160 and returns the p2wpkh ScriptPubKey
+     *
      * @param h160 a {@code byte} array
      * @return a {@link Script} object
      */
@@ -78,9 +82,11 @@ public class Script {
     }
 
     /**
-     * Parse
-     * @param s a {@link ByteArrayInputStream}
-     * @return a {@link Script} object
+     * Parses a script from the provided {@link ByteArrayInputStream}.
+     *
+     * @param s the {@link ByteArrayInputStream} containing the serialized script
+     * @return a {@link Script} object representing the parsed commands
+     * @throws IllegalArgumentException if the script length does not match the expected value during parsing
      */
     public static Script parse(ByteArrayInputStream s) {
         // get the length of the entire script
@@ -120,21 +126,23 @@ public class Script {
     }
 
     /**
-     * Serialize
-     * @return a {@code byte} array
+     * Serializes a script into its raw byte representation.
+     *
+     * @return a byte array representing the raw serialized script
+     * @throws IllegalStateException if an element's length exceeds the allowable maximum (520 bytes)
      */
     public byte[] rawSerialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-
+        // iterate over the command set
         for (Cmd cmd : this.cmds) {
             if (cmd.isOpCode()) {
+                // if the cmd is an opcode, write the opcode code as a byte array
                 result.writeBytes(cmd.getOpCode().getCode().toBytesLittleEndian(1));
             } else {
-
+                // if the cmd is an element, get its length
                 var length = cmd.getElement().length;
-
                 if (length < 75) {
-
+                    // if the length is less than 75, write the length as a byte array
                     result.writeBytes(Int.parse(length).toBytesLittleEndian(1));
                 } else if (length > 75 && length < 0x100) {
                     // OP_PUSHDATA1
@@ -147,6 +155,7 @@ public class Script {
                 } else {
                     throw new IllegalStateException("Too long cmd: " + length);
                 }
+                // write the element
                 result.writeBytes(cmd.getElement());
             }
         }
@@ -154,11 +163,13 @@ public class Script {
     }
 
     /**
-     * Serialize with varint
-     * @return a {@code byte} array
+     * Serializes the script into a byte array. The serialization includes a varint
+     * encoding of the script length followed by the raw serialized script.
+     *
+     * @return a byte array containing the serialized representation of the script
      */
     public byte[] serialize() {
-        // serializeLegacy the script
+        // serialize the script
         var result = this.rawSerialize();
         var total = Int.parse(result.length);
         // encode the varint based on the script length
@@ -168,7 +179,8 @@ public class Script {
     }
 
     /**
-     * Evaluates the combined command set. Returns a{@code true} if the script succeeds, else false.
+     * Evaluates the combined command set. Returns true if the script succeeds, else false.
+     *
      * @param z The Signature hash. A {@link Int} object
      * @return a {@code boolean}
      */
@@ -215,21 +227,31 @@ public class Script {
                     // extend the command set with the parsed commands from the redeem script
                     cmdsCopy.addAll(Script.parse(stream).cmds);
                 } else if (new Script(cmdsCopy).isP2wpkhScriptPubkey()) {
+                    // get the 20-byte hash
                     var h160 = stack.pop();
+                    // skip the OP_0
                     stack.pop();
+                    // add all witness cmds
                     cmdsCopy.addAll(witness.getCmds());
+                    // create a p2pkh script from the hash
                     cmdsCopy.addAll(Script.p2pkhScript(h160).getCmds());
                 } else if (new Script(cmdsCopy).isP2wshScriptPubkey()) {
+                    // get the sha256 of the witness script
                     var s256 = stack.pop();
+                    // skip the OP_0
                     stack.pop();
+                    // get the witness script from the witness field
                     var witnessScript = witness.getCmds().removeLast();
+                    // add all remaining cmds from the witness field to the command set
                     cmdsCopy.addAll(witness.getCmds());
+                    // check if the witness script hashes to the expected value
                     if (!Arrays.equals(s256, Hash.sha256(witnessScript.getElement()))) {
                         log.severe("Script evaluation failed! Witness script hash mismatch!");
                         return false;
                     }
                     var stream = new ByteArrayInputStream(Bytes.concat(Helper.encodeVarInt(Int.parse(witnessScript.getElement().length)),
                             witnessScript.getElement()));
+                    // parse the witness script and add the parsed cmds to the command set
                     var witnessScriptCmds = Script.parse(stream).cmds;
                     cmdsCopy.addAll(witnessScriptCmds);
                 }
@@ -250,7 +272,7 @@ public class Script {
     }
 
     /**
-     * Determines if the current script is a Pay-to-Script-Hash (P2SH) ScriptPubKey.
+     * Determines whether the current script is a Pay-to-Script-Hash (P2SH) ScriptPubKey.
      * <p>
      * A P2SH ScriptPubKey has the following structure:
      * - It consists of exactly three commands.
@@ -267,7 +289,7 @@ public class Script {
     }
 
     /**
-     * Determines if the current script is a Pay-to-Witness-Public-Key-Hash (P2WPKH) ScriptPubKey.
+     * Determines whether the current script is a Pay-to-Witness-Public-Key-Hash (P2WPKH) ScriptPubKey.
      * <p>
      * A P2WPKH ScriptPubKey has the following structure:
      * - It consists of exactly two commands.
@@ -282,7 +304,7 @@ public class Script {
     }
 
     /**
-     * Determines if the current script is a Pay-to-Witness-Script-Hash (P2WSH) ScriptPubKey.
+     * Determines whether the current script is a Pay-to-Witness-Script-Hash (P2WSH) ScriptPubKey.
      * <p>
      * A P2WSH ScriptPubKey has the following structure:
      * - It consists of exactly two commands.
@@ -294,6 +316,10 @@ public class Script {
     public boolean isP2wshScriptPubkey() {
         return cmds.size() == 2 && OpCodes.OP_0_0.equals(cmds.getFirst().getOpCode())
                 && cmds.get(1).isElement() && cmds.get(1).getElement().length == 32;
+    }
+
+    public List<Cmd> getCmds() {
+        return cmds;
     }
 
     /**
@@ -315,10 +341,5 @@ public class Script {
         }
         return String.join(" ", result);
     }
-
-    public List<Cmd> getCmds() {
-        return cmds;
-    }
-
 
 }

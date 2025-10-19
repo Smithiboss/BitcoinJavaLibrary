@@ -7,7 +7,7 @@ import org.smithiboss.utils.Helper;
 import java.io.ByteArrayOutputStream;
 import java.util.Objects;
 
-public class GetHeadersMessage {
+public class GetHeadersMessage implements Message {
 
     public static final String COMMAND = "getheaders";
 
@@ -26,20 +26,27 @@ public class GetHeadersMessage {
     }
 
     /**
-     * Serialize
-     * @return a {@code byte} array
+     * {@inheritDoc}
      */
     public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
-
+        // version - 4 bytes
         result.writeBytes(version.toBytesLittleEndian(4));
-
+        // encode numHashes as a varint
         result.writeBytes(Helper.encodeVarInt(numHashes));
-
+        // add the start block
         result.writeBytes(Bytes.reverseOrder(startBlock));
-
+        // add the end block
         result.writeBytes(Bytes.reverseOrder(endBlock));
         return result.toByteArray();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public byte[] getCommand() {
+        return COMMAND.getBytes();
     }
 
 }

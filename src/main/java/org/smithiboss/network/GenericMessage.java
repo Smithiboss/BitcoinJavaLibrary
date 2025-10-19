@@ -1,6 +1,6 @@
 package org.smithiboss.network;
 
-public class GenericMessage implements Message{
+public class GenericMessage implements Message {
 
     private final String COMMAND;
     private final byte[] payload;
@@ -10,14 +10,19 @@ public class GenericMessage implements Message{
         this.payload = payload;
     }
 
-
-    @Override
-    public byte[] getCommand() {
-        return COMMAND.getBytes();
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte[] serialize() {
         return this.payload;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public byte[] getCommand() {
+        return COMMAND.getBytes();
     }
 }

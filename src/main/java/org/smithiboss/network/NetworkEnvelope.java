@@ -79,13 +79,17 @@ public class NetworkEnvelope {
     }
 
     /**
-     * Parse the length
-     * @param s a {@link ByteArrayInputStream} object
-     * @return a {@code int}
+     * Get the expected length of the payload.
+     *
+     * @param s the ByteArrayInputStream containing the serialized data to parse
+     * @return the parsed length as an integer
      */
     public static int parseLength(ByteArrayInputStream s) {
+        // skip magic
         Bytes.read(s, 4);
+        // skip command
         Bytes.read(s, 12);
+        // get payload length
         var length = Helper.littleEndianToInt(Bytes.read(s, 4));
         return length.intValue();
     }
@@ -98,7 +102,7 @@ public class NetworkEnvelope {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
         // add network magic - 4 bytes
         result.writeBytes(magic);
-        // add command with zero byte trailing - 12 bytes
+        // add command with zero bytes trailing - 12 bytes
         result.writeBytes(Bytes.concat(command, Bytes.initFill(12 - command.length, (byte) 0x00)));
         // add payload length - 4 bytes
         result.writeBytes(Int.parse(payload.length).toBytesLittleEndian(4));
@@ -122,7 +126,7 @@ public class NetworkEnvelope {
      */
     @Override
     public String toString() {
-        return "NetworkEnvelope{" +
+        return "NetworkEnvelope={" +
                 "command=" + Bytes.byteArrayToHexString(command) +
                 ", payload=" + Hex.parse(payload) +
                 ", testnet=" + testnet +

@@ -50,8 +50,7 @@ public class VersionMessage implements Message {
     }
 
     /**
-     * Serialize
-     * @return a {@code byte} array
+     * {@inheritDoc}
      */
     public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -92,6 +91,9 @@ public class VersionMessage implements Message {
         return result.toByteArray();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public byte[] getCommand() {
         return COMMAND.getBytes();

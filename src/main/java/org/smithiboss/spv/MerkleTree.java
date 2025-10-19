@@ -14,6 +14,7 @@ public class MerkleTree {
 
     /**
      * Constructs a Merkle tree with the given number of total transactions
+     *
      * @param total a {@code int}
      */
     public MerkleTree(int total) {
@@ -30,7 +31,6 @@ public class MerkleTree {
             // add the list of nodes at this depth to the list of all nodes at all depths
             nodes.add(levelHashes);
         }
-        
         currentDepth = 0;
         currentIndex = 0;
     }
@@ -61,6 +61,7 @@ public class MerkleTree {
 
     /**
      * Returns the root of the tree
+     *
      * @return a {@code byte} array
      */
     public byte[] root() {
@@ -69,6 +70,7 @@ public class MerkleTree {
 
     /**
      * Sets the current node to the given value
+     *
      * @param value a {@code byte} array
      */
     public void setCurrentNode(byte[] value) {
@@ -77,6 +79,7 @@ public class MerkleTree {
 
     /**
      * Returns the current node
+     *
      * @return a {@code byte} array
      */
     public byte[] getCurrentNode() {
@@ -85,6 +88,7 @@ public class MerkleTree {
 
     /**
      * Returns the left child of the current node
+     *
      * @return a {@code byte} array
      */
     public byte[] getLeftNode() {
@@ -93,6 +97,7 @@ public class MerkleTree {
 
     /**
      * Returns the right child of the current node
+     *
      * @return a {@code byte} array
      */
     public byte[] getRightNode() {
@@ -101,6 +106,7 @@ public class MerkleTree {
 
     /**
      * Returns whether the current node is a leaf node
+     *
      * @return a {@code boolean}
      */
     public boolean isLeaf() {
@@ -109,6 +115,7 @@ public class MerkleTree {
 
     /**
      * Returns whether the right child of the current node exists
+     *
      * @return a {@code boolean}
      */
     public boolean rightExists() {
@@ -117,6 +124,7 @@ public class MerkleTree {
 
     /**
      * Populates the tree with given hashes using flag bits
+     *
      * @param flagBitsArray a {@code byte} array
      * @param hashesList a {@code byte} array
      */

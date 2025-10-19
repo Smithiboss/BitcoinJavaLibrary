@@ -33,9 +33,11 @@ public class BloomFilter {
     }
 
     /**
-     * Add an item to the filter
+     * Adds the specified item to the Bloom filter. The item is hashed multiple times
+     * using the Murmur3 hash function, and the resulting hash values
+     * are used to set bits in the filter's bitfield.
      *
-     * @param item an array of {@link byte} objects
+     * @param item the byte array representing the item to be added to the filter
      */
     public void add(byte[] item) {
         for (int i = 0; i < functionCount; i++) {
@@ -52,9 +54,10 @@ public class BloomFilter {
     }
 
     /**
-     * Returns the filter as a byte array. The filter is returned as a bitfield
+     * Converts the internal bit field of the Bloom filter into a byte array.
+     * The returned byte array represents the current state of the filter.
      *
-     * @return an array of {@link byte} objects
+     * @return a byte array that represents the current state of the Bloom filter's bit field
      */
     public byte[] filterBytes() {
         return Bytes.bitFieldToBytes(this.bitField);
@@ -62,6 +65,7 @@ public class BloomFilter {
 
     /**
      * Returns a filterload message with the current filter and the given flag
+     *
      * @param flag a {@link Int} object
      * @return a {@link GenericMessage} object
      */

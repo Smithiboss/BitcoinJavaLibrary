@@ -42,9 +42,12 @@ public class Block {
     }
 
     /**
-     * Parse
-     * @param stream a {@link java.io.ByteArrayOutputStream} object
-     * @return a {@link Block} object
+     * Parses a {@code ByteArrayInputStream} to create a {@link Block} instance by reading
+     * and interpreting the block data fields in the expected order.
+     *
+     * @param stream the {@code ByteArrayInputStream} containing the block data
+     *               to be parsed; must not be null
+     * @return a {@link Block} object constructed from the parsed data
      */
     public static Block parse(ByteArrayInputStream stream) {
         // version is 4 bytes little endian
@@ -63,8 +66,10 @@ public class Block {
     }
 
     /**
-     * Serialize
-     * @return a {@code byte} array
+     * Serializes the block into its byte array representation by encoding its fields
+     * in the expected order and format.
+     *
+     * @return a byte array containing the serialized representation of the block
      */
     public byte[] serialize() {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -84,8 +89,9 @@ public class Block {
     }
 
     /**
-     * Hash
-     * @return a {@code byte} array
+     * Computes the hash of the block.
+     *
+     * @return a {@code byte} array representing the hash of the block in little-endian format
      */
     public byte[] hash() {
         // serialize
@@ -97,32 +103,38 @@ public class Block {
     }
 
     /**
-     * Returns whether this block supports Bip9
-     * @return a {@code boolean}
+     * Determines if this block signals support for BIP9 (Soft Fork Deployment).
+     * Checks whether the first three bits of the block's version field are set
+     * to the pattern `001` as defined by the BIP9 specification.
+     *
+     * @return a {@code boolean} indicating whether the block supports BIP9;
+     *         {@code true} if the first three bits of the version field are `001`,
+     *         otherwise {@code false}.
      */
     public boolean isBip9() {
-        // bip9 is signaled if the first 3 bits are 001
-        // shift 29 to the right, leaving the first 3 bits
         return version.intValue() >> 29 == 0b001;
     }
 
     /**
-     * Returns whether this block supports Bip91
-     * @return a {@code boolean}
+     * Determines if this block signals support for BIP91.
+     * BIP91 is indicated if the 5th least significant bit of the block's version number is set to 1.
+     *
+     * @return a {@code boolean} indicating whether the block supports BIP91;
+     *         {@code true} if the 5th least significant bit is 1, otherwise {@code false}.
      */
     public boolean isBip91() {
-        // bip91 is signaled if the 5th last bit is 1
-        // shift 4 to the right, leaving the first 28 bits. Bitwise AND checking for 1
         return (version.intValue() >> 4 & 1) == 1;
     }
 
     /**
-     * Returns whether this block supports Bip141
-     * @return a {@code boolean}
+     * Determines if this block signals support for BIP141 (Segregated Witness).
+     * BIP141 is indicated if the 2nd least significant bit of the block's version
+     * number is set to 1.
+     *
+     * @return a {@code boolean} indicating whether the block supports BIP141;
+     *         {@code true} if the 2nd least significant bit is set to 1, otherwise {@code false}.
      */
     public boolean isBip141() {
-        // bip9 is signaled if the 2nd last bit is 1
-        // shift 1 to the right, leaving the first 31 bits. Bitwise AND checking for 1
         return (version.intValue() >> 1 & 1) == 1;
     }
 
@@ -135,8 +147,11 @@ public class Block {
     }
 
     /**
-     * Returns the difficulty
-     * @return a {@link Int} object
+     * Calculates the difficulty of the proof-of-work required for a block.
+     * The difficulty is derived by comparing the minimum target value (maximum difficulty)
+     * to the current proof-of-work target value.
+     *
+     * @return an {@code Int} representing the difficulty of the block's proof-of-work.
      */
     public Int difficulty() {
         var lowest = Hex.parse("ffff").mul(Int.parse(256).pow(Hex.parse("1d").sub(Int.parse(3))));
@@ -144,8 +159,12 @@ public class Block {
     }
 
     /**
-     * Check for valid proof of work
-     * @return a {@code boolean}
+     * Validates the proof-of-work for the block by checking whether the hash
+     * of the serialized block is less than the target value. This ensures that
+     * the block meets the required computational difficulty.
+     *
+     * @return a {@code boolean} indicating whether the block satisfies the proof-of-work requirement;
+     *         {@code true} if the block's proof-of-work is valid, otherwise {@code false}.
      */
     public boolean checkProofOfWork() {
         var hash = Hash.hash256(serialize());
@@ -154,14 +173,19 @@ public class Block {
     }
 
     /**
-     * Validates the merkle root
-     * @return a {@code boolean}
+     * Validates the Merkle root of the block by comparing the computed Merkle root
+     * from the list of transaction hashes against the stored Merkle root in the block.
+     * <p>
+     * The transaction hashes are processed in reverse order to match the expected
+     * endian format before computing the Merkle root.
+     *
+     * @return a {@code boolean} indicating whether the computed Merkle root matches
+     *         the stored Merkle root in the block; {@code true} if the Merkle root
+     *         is valid, otherwise {@code false}.
      */
     public boolean validateMerkleRoot() {
         var hashes = txHashes.stream().map(Bytes::reverseOrder).toList();
-
         var root = Helper.merkleRoot(hashes);
-
         return Arrays.equals(Bytes.reverseOrder(root), merkleRoot);
     }
 

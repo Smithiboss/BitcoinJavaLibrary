@@ -25,6 +25,7 @@ public class MerkleBlock {
 
     /**
      * Constructs a MerkleBlock object
+     *
      * @param version a {@link Int} object
      * @param prevBlock a {@code byte} array
      * @param merkleRoot a {@code byte} array
@@ -48,9 +49,10 @@ public class MerkleBlock {
     }
 
     /**
-     * Parse
-     * @param s a {@link ByteArrayInputStream}
-     * @return a {@link MerkleBlock} object
+     * Parses a {@link ByteArrayInputStream} to construct a {@link MerkleBlock} object.
+     *
+     * @param s the {@link ByteArrayInputStream} containing the serialized data of a Merkle block
+     * @return a {@link MerkleBlock} object constructed from the parsed data
      */
     public static MerkleBlock parse(ByteArrayInputStream s) {
         // version is 4 bytes little endian
@@ -82,8 +84,12 @@ public class MerkleBlock {
     }
 
     /**
-     * Verifies whether the merkle tree information validates the merkle root
-     * @return a {@code boolean}
+     * Validates the integrity of the merkle block by ensuring the calculated merkle root
+     * matches the provided merkle root from the block data. This involves reconstructing
+     * the merkle tree using the hashes and flags data to compute the merkle root.
+     *
+     * @return {@code true} if the reconstructed merkle root matches the original merkle root,
+     *         {@code false} otherwise.
      */
     public boolean isValid() {
         // convert flag bytes to bit field

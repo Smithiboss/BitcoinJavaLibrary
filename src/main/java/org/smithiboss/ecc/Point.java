@@ -23,13 +23,13 @@ public class Point {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        if (x == null) return "Point(infinity)";
-        return "Point(" + x + ", " + y + ")_" + a + "_" + b;
-    }
-
+    /**
+     * Compares the current Point instance with another Point instance for equality.
+     *
+     * @param other the Point instance to compare with the current instance
+     * @return true if the current Point is equal to the specified Point, false otherwise
+     * @throws IllegalStateException if the current Point instance has a null x field but a non-null y field
+     */
     public boolean eq(Point other) {
         if (other == null) {
             return false;
@@ -45,16 +45,9 @@ public class Point {
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {return Objects.hash(x, y, a, b);}
-
-    public boolean notEquals(Point point) {
-        return !this.equals(point);
-    }
-
     /**
      * add
+     *
      * @param other {@link Point}
      * @return {@link Point}
      */
@@ -93,6 +86,7 @@ public class Point {
 
     /**
      * Multiply a {@link Point} with a coefficient
+     *
      * @param coefficient {@link Int}
      * @return {@link Point}
      */
@@ -116,6 +110,12 @@ public class Point {
         return result;
     }
 
+    /**
+     * Retrieves the numerical value associated with the given operator if it is an instance of FieldElement.
+     *
+     * @param o the operator to retrieve the numerical value from
+     * @return the numerical value as an {@link Int}, or null if the operator is not an instance of FieldElement
+     */
     public static Int getNum(Operator o) {
         if (o instanceof FieldElement) {
             return ((FieldElement) o).getNum();
@@ -147,5 +147,16 @@ public class Point {
      * @return {@link FieldElement}
      */
     public Operator getB() {return b;}
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        if (x == null) return "Point(infinity)";
+        return "Point(" + x + ", " + y + ")_" + a + "_" + b;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {return Objects.hash(x, y, a, b);}
 
 }

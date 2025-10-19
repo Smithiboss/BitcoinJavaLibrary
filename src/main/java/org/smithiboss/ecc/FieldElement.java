@@ -15,7 +15,7 @@ public class FieldElement implements Operator {
         this.num = num;
         this.prime = prime;
 
-        // Check if num is in range(0, prime - 1)
+        // Check if the num is in range(0, prime - 1)
         if (num.compareTo(Int.parse(0)) < 0 || num.compareTo(prime) >= 0) {
             String error = String.format("Num %s not in the range from 0 to %s", num, prime.getBigInteger().subtract(BigInteger.ONE));
             log.severe(error);
@@ -23,6 +23,11 @@ public class FieldElement implements Operator {
         }
     }
 
+    /**
+     * eq
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@code boolean}
+     */
     @Override
     public boolean eq(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
@@ -32,26 +37,20 @@ public class FieldElement implements Operator {
         return this.num.eq(other.num) && this.prime.eq(other.prime);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "FieldElement_" + prime + "(" + num + ")";
-    }
-
     /**
      * ne
-     * @param other {@link FieldElement}
-     * @return boolean
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@code boolean}
      */
     @Override
-    public boolean ne(Operator other) {
-        return !this.eq(other);
+    public boolean ne(Operator otherOperator) {
+        return !this.eq(otherOperator);
     }
 
     /**
      * add
-     * @param otherOperator {@link FieldElement}
-     * @return {@link FieldElement}
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@link FieldElement} object
      */
     @Override
     public FieldElement add(Operator otherOperator) {
@@ -66,8 +65,8 @@ public class FieldElement implements Operator {
 
     /**
      * sub
-     * @param otherOperator {@link FieldElement}
-     * @return {@link FieldElement}
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@link FieldElement} object
      */
     @Override
     public FieldElement sub(Operator otherOperator) {
@@ -82,8 +81,8 @@ public class FieldElement implements Operator {
 
     /**
      * mul
-     * @param otherOperator {@link FieldElement}
-     * @return {@link FieldElement}
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@link FieldElement} object
      */
     @Override
     public FieldElement mul(Operator otherOperator) {
@@ -96,6 +95,11 @@ public class FieldElement implements Operator {
         return new FieldElement(result, prime);
     }
 
+    /**
+     * mul
+     * @param coefficient a {@code int}
+     * @return a {@link FieldElement} object
+     */
     @Override
     public FieldElement mul(int coefficient) {
         var result = new FieldElement(Int.parse(0), this.prime);
@@ -107,8 +111,8 @@ public class FieldElement implements Operator {
 
     /**
      * pow
-     * @param exponent {@link FieldElement}
-     * @return {@link FieldElement}
+     * @param exponent a {@link Int} object
+     * @return a {@link FieldElement} object
      */
     public FieldElement pow(Int exponent) {
         Int n = exponent.mod(prime.sub(Int.parse(1))); // Fermat’s little theorem
@@ -118,8 +122,8 @@ public class FieldElement implements Operator {
 
     /**
      * div
-     * @param otherOperator {@link FieldElement}
-     * @return {@link FieldElement}
+     * @param otherOperator a {@link Operator} instance
+     * @return a {@link FieldElement} object
      */
     public FieldElement div(Operator otherOperator) {
         FieldElement other = (FieldElement) otherOperator;
@@ -143,16 +147,22 @@ public class FieldElement implements Operator {
     }
 
     /**
-     * Returns num
+     * Returns the num
      * @return a {@link Int} object
      */
     public Int getNum() {return num;}
 
     /**
-     * Returns prime
+     * Returns the prime
      * @return a {@link Int} object
      */
     public Int getPrime() {return prime;}
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "FieldElement_" + prime + "(" + num + ")";
+    }
 
     /** {@inheritDoc} */
     @Override

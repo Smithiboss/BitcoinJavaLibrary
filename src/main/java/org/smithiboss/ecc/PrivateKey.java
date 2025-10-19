@@ -19,9 +19,10 @@ public class PrivateKey {
     }
 
     /**
-     * Signs a given message hash z with the private key
-     * @param z a {@link Int} object
-     * @return a {@link Signature} object
+     * Signs the provided message using the private key to produce a digital signature.
+     *
+     * @param z the message represented as an {@link Int} object, typically the hash of the message to be signed
+     * @return a {@link Signature} object containing the r and s components of the digital signature
      */
     public Signature sign(Int z) {
         Int k;
@@ -30,8 +31,11 @@ public class PrivateKey {
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);
         }
+        // get the x-coordinate of the target point k*G
         Int r = ((S256Field) S256Point.G.mul(k).getX()).getNum();
+        // compute the inverse of k mod N
         Int kInv = k.modPow(S256Point.N.sub(Int.parse(2)), S256Point.N);
+        // compute s = kInv * (z + r * d) mod N
         Int s = (z.add(r.mul(this.secret))).mul(kInv).mod(S256Point.N);
         if (s.compareTo(S256Point.N.div(Int.parse(2))) > 0) {
             s = S256Point.N.sub(s);
@@ -42,6 +46,7 @@ public class PrivateKey {
     /**
      * Calculates a unique, deterministic k
      * Deterministic k generation standard specified in RFC6979 * <a href="https://tools.ietf.org/html/rfc6979"></a>
+     *
      * @param z The message
      * @return a {@link Int} object
      * @throws NoSuchAlgorithmException Algorithm not found
@@ -106,6 +111,7 @@ public class PrivateKey {
 
     /**
      * Returns the WIF format of the private key
+     *
      * @param compressed {@code boolean} SEC
      * @param testnet {@code boolean} Testnet
      * @return a {@link String} object
@@ -124,7 +130,8 @@ public class PrivateKey {
     }
 
     /**
-     * Return the public key
+     * Returns the public key
+     *
      * @return a {@link S256Point} object
      */
     public S256Point getPublicKey() {return this.pubKey;}

@@ -50,10 +50,12 @@ public class S256Point extends Point {
     }
 
     /**
-     * Verifies whether a signature is valid
-     * @param z Signature hash as {@link Int} object
-     * @param sig {@link Signature}
-     * @return True if valid else false
+     * Verifies a digital signature for a given message hash using elliptic curve cryptography.
+     * The method checks whether the given signature is valid for the input message hash.
+     *
+     * @param z the message hash to be verified
+     * @param sig the digital signature that needs to be verified
+     * @return true if the signature is valid for the given message hash, otherwise false
      */
     public boolean verify(Int z, Signature sig) {
         // Calculate 1/s with Fermat's little theorem, since N is prime
@@ -68,7 +70,8 @@ public class S256Point extends Point {
     }
 
     /**
-     * Returns the SEC format for a {@link S256Point}
+     * Returns the SEC format of a {@link S256Point}
+     *
      * @return byte array
      */
     public byte[] sec(boolean compressed) {
@@ -87,6 +90,7 @@ public class S256Point extends Point {
 
     /**
      * Returns a {@link S256Point} object from SEC binary
+     *
      * @param secBin byte array
      * @return {@link S256Point}
      */
@@ -123,7 +127,7 @@ public class S256Point extends Point {
     }
 
     /**
-     * Performs a hash160 on SEC format
+     * Performs a hash160 on the SEC format
      * @return byte array
      */
     public byte[] hash160(boolean compressed) {
@@ -131,17 +135,18 @@ public class S256Point extends Point {
     }
 
     /**
-     * Returns the address string
-     * @param compressed boolean
-     * @param testnet boolean
-     * @return a {@link String}
+     * Generates the Base58-encoded address for the {@link S256Point} object by hashing its SEC format
+     * and concatenating a network-specific prefix with the resulting hash160 digest, followed by a checksum.
+     *
+     * @param compressed a {@code boolean} indicating whether to use the compressed SEC format
+     * @param testnet a {@code boolean} indicating whether the address is for the testnet (true) or mainnet (false)
+     * @return a {@link String} representing the Base58-encoded address
      */
     public String address(boolean compressed, boolean testnet) {
         // Compute hash160 of SEC format
         byte[] h160 = this.hash160(compressed);
         // Load prefix depending on testnet
         byte prefix = (byte) (testnet ? 0x6f : 0x00);
-
         return Base58.encodeChecksum(Bytes.concat(new byte[]{prefix}, h160));
     }
 

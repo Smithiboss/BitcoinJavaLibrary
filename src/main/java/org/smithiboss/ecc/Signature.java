@@ -7,22 +7,26 @@ import java.io.ByteArrayInputStream;
 public record Signature(Int r, Int s) {
 
     /**
-     * Serializes the {@link Signature} in DER format
+     * Constructs a DER-encoded byte array representing the cryptographic signature,
+     * combining the DER-encoded values of r and s along with the appropriate prefix structure.
      *
-     * @return a {@code byte} array
+     * @return a byte array containing the DER-encoded representation of the signature.
      */
     public byte[] der() {
         byte[] rBin = toUnsignedDer(r);
         byte[] sBin = toUnsignedDer(s);
-
         return Bytes.concat(new byte[]{0x30}, new byte[]{(byte) (rBin.length + sBin.length)}, rBin, sBin);
     }
 
     /**
-     * Parse
+     * Parses a DER-formatted byte array representing a cryptographic signature
+     * and returns a {@link Signature} object.
      *
-     * @param sigBin a {@code byte} array
-     * @return a {@link Signature} object
+     * @param sigBin the byte array containing the DER-encoded signature.
+     * @return a {@link Signature} object containing the parsed r and s components.
+     * @throws IllegalArgumentException if the byte array does not conform to the
+     *                                  expected format, contains invalid markers,
+     *                                  or has an incorrect length.
      */
     public static Signature parse(byte[] sigBin) {
         var sigStream = new ByteArrayInputStream(sigBin);
@@ -60,10 +64,12 @@ public record Signature(Int r, Int s) {
     }
 
     /**
-     * Formats r and s for DER format
+     * Converts an integer value to its DER-encoded unsigned representation.
+     * The result is a byte array where the integer is formatted according to DER encoding rules,
+     * including the addition of necessary markers and handling of sign extension.
      *
-     * @param value a {@link Int} object
-     * @return {@code byte} array
+     * @param value the {@link Int} value to be encoded as an unsigned DER byte array.
+     * @return a byte array representing the unsigned DER-encoded value.
      */
     private byte[] toUnsignedDer(Int value) {
         // Format to 32 bytes and remove leading 0x00 bytes
@@ -75,7 +81,6 @@ public record Signature(Int r, Int s) {
         // Add marker byte 0x02 and length of raw
         var markers = new byte[]{0x02, (byte) raw.length};
         raw = Bytes.concat(markers, raw);
-
         return raw;
     }
 }

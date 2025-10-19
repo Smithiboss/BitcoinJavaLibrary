@@ -44,7 +44,7 @@ public class Int {
     }
 
     /**
-     * Equals
+     * eq
      * @param i a {@link Int} object
      * @return a boolean
      */
@@ -54,7 +54,7 @@ public class Int {
     }
 
     /**
-     * Not equals
+     * ne
      * @param i a {@link Int} object
      * @return a boolean
      */
@@ -170,7 +170,7 @@ public class Int {
     }
 
     /**
-     * Mod pow
+     * Modpow
      * @param exponent a {@link Int} object
      * @param divisor a {@link Int} object
      * @return a {@link Int} object
@@ -184,9 +184,14 @@ public class Int {
     }
 
     /**
-     * {@link Int} to byte array
-     * @param length int
-     * @return byte array
+     * Converts the underlying integer value to a byte array of specified length.
+     * If the byte array representation of the integer matches the specified length,
+     * it is returned as is. If the representation is shorter, it is padded with leading zeros.
+     * If the representation is longer, it is truncated. Throws an exception for unsupported cases.
+     *
+     * @param length the desired length of the resulting byte array
+     * @return a byte array representation of the integer with the specified length
+     * @throws IllegalStateException if the conversion cannot produce a valid result
      */
     public byte[] toBytes(int length) {
         byte[] bytes = bigInt.toByteArray();
@@ -194,6 +199,7 @@ public class Int {
         if (len == length) return bytes;
         else if (len == length + 1) return Arrays.copyOfRange(bytes, 1, length + 1);
         else if (len < length) {
+            // pad with leading zeros
             byte[] fill = Bytes.initFill(length - len, (byte) 0x00);
             return Bytes.concat(fill, bytes);
         } else {
@@ -219,19 +225,23 @@ public class Int {
     }
 
     /**
-     * Copy of {@link BigInteger} compareTo
-     * @param i a {@link Int} object
-     * @return int
+     * Compares this {@link Int} object with the specified {@link Int} object for order.
+     *
+     * @param i the {@link Int} object to be compared
+     * @return a negative integer, zero, or a positive integer as this object
+     *         is less than, equal to, or greater than the specified object
      */
     public int compareTo(Int i) {
         return bigInt.compareTo(i.bigInt);
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return bigInt.toString();
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
@@ -240,22 +250,23 @@ public class Int {
         } else return false;
     }
 
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return Objects.hash(bigInt);
     }
 
     /**
-     * To hex
+     * Converts the current {@link Int} object to its {@link Hex} representation.
      *
-     * @return a {@link Hex} object
+     * @return a {@link Hex} object representing the hexadecimal value of the current integer.
      */
     public Hex toHex() {
         return Hex.parse(this.bigInt.toByteArray());
     }
 
     /**
-     * Get BigInteger
+     * Get the BigInteger
      * @return {@link BigInteger}
      */
     public BigInteger getBigInteger() {
@@ -263,7 +274,7 @@ public class Int {
     }
 
     /**
-     * Get long value
+     * Get the long value
      * @return long
      */
     public long longValue() {
@@ -271,7 +282,7 @@ public class Int {
     }
 
     /**
-     * Get int value
+     * Get the int value
      * @return int
      */
     public int intValue() {
